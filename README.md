@@ -6,7 +6,7 @@
 
 My personal version of the public BYF app - trust me nobody wants these fitness stats 🏋️🤔
 
-**Public BYF version with instructions and a repo to fork available [HERE](https://github.com/TheBIMsider/BYF)**
+**Public BYF localStorage version with instructions and a repo to fork available [HERE](https://github.com/TheBIMsider/BYF)**
 
 ---
 
