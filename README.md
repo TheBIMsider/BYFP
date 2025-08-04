@@ -2,8 +2,6 @@
 
 **⚠️ Personal Data Alert:** This is my actual fitness tracking app with real data (or lack of it 😔).
 
-### Only The Brave Should Look Here 👉 [Carl's Fitness Shame Repository](https://thebimsider.github.io/BYFP/) 🤦‍♂️
-
 My personal version of the public BYF app - trust me nobody wants these fitness stats 🏋️🤔
 
 **Public BYF localStorage version with instructions and a repo to fork available [HERE](https://github.com/TheBIMsider/BYF)**
