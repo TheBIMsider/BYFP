@@ -1,18 +1,21 @@
 /**
- * BribeYourselfFit - Cloud Version with JSONBin.io Integration
+ * BribeYourselfFit - Airtable Version Integration
  *
  * This JavaScript file implements a complete fitness tracking system with:
- * - Cloud storage via JSONBin.io API
+ * - Cloud storage via Airtable API
  * - Offline-first sync with localStorage backup
  * - Real-time sync status indicators
  * - Progressive error handling and fallback
  * - Identical UX to localStorage version
+ * - Structured database with relational data
  *
- * Cloud Storage Architecture:
- * - Primary: JSONBin.io cloud storage
+ * Airtable Storage Architecture:
+ * - Primary: Airtable structured database (5 tables)
  * - Backup: localStorage for offline functionality
  * - Sync Strategy: Offline-first with background sync
  * - Error Handling: Progressive fallback with user feedback
+ * - Data Structure: Relational tables vs flat JSON
+ * - Enhanced Features: Field validation, data types, visual interface
  */
 
 class BribeYourselfFitCloud {
@@ -28,10 +31,17 @@ class BribeYourselfFitCloud {
     this.chartPeriod = 7;
     this.currentDate = new Date().toISOString().split('T')[0];
 
-    // Cloud configuration
+    // Airtable configuration
     this.cloudConfig = {
-      apiKey: null,
-      binId: null,
+      token: null,
+      baseId: null,
+      tableIds: {
+        users: null,
+        dailyLogs: null,
+        settings: null,
+        customRewards: null,
+        achievements: null,
+      },
       isConnected: false,
       lastSync: null,
       syncInProgress: false,
@@ -65,8 +75,12 @@ class BribeYourselfFitCloud {
     this.setupEventListeners();
     this.updateCurrentDate();
 
-    // Show setup screen if no user profile exists
-    if (!this.currentUser || !this.cloudConfig.apiKey) {
+    // Show setup screen if no user profile exists or credentials missing
+    if (
+      !this.currentUser ||
+      !this.cloudConfig.token ||
+      !this.cloudConfig.baseId
+    ) {
       this.showSetupScreen();
     } else {
       this.showAppScreen();
@@ -82,7 +96,19 @@ class BribeYourselfFitCloud {
     try {
       const savedConfig = localStorage.getItem('byf_cloud_config');
       if (savedConfig) {
-        this.cloudConfig = { ...this.cloudConfig, ...JSON.parse(savedConfig) };
+        const parsed = JSON.parse(savedConfig);
+        this.cloudConfig = { ...this.cloudConfig, ...parsed };
+
+        // Ensure tableIds object exists for backward compatibility
+        if (!this.cloudConfig.tableIds) {
+          this.cloudConfig.tableIds = {
+            users: null,
+            dailyLogs: null,
+            settings: null,
+            customRewards: null,
+            achievements: null,
+          };
+        }
       }
     } catch (error) {
       console.error('Error loading cloud config:', error);
@@ -188,13 +214,13 @@ class BribeYourselfFitCloud {
    */
   async resetCloudData() {
     if (!this.cloudConfig.isConnected) {
-      this.showError('Not connected to cloud storage');
+      this.showError('Not connected to Airtable storage');
       return;
     }
 
     if (
       !confirm(
-        'This will permanently delete all data from cloud storage. This cannot be undone. Continue?'
+        'This will permanently delete all data from Airtable. This cannot be undone. Continue?'
       )
     ) {
       return;
@@ -202,47 +228,67 @@ class BribeYourselfFitCloud {
 
     if (
       !confirm(
-        'Are you absolutely sure? This will delete ALL your fitness data from the cloud!'
+        'Are you absolutely sure? This will delete ALL your fitness data from Airtable!'
       )
     ) {
       return;
     }
 
     try {
-      if (this.cloudConfig.binId) {
-        const response = await fetch(
-          `https://api.jsonbin.io/v3/b/${this.cloudConfig.binId}`,
+      // For Airtable, we'll clear all records from each table
+      const tablesToClear = [
+        'Users',
+        'Daily%20Logs',
+        'Settings',
+        'Custom%20Rewards',
+        'Achievements',
+      ];
+
+      for (const tableName of tablesToClear) {
+        // Get all records first
+        const listResponse = await fetch(
+          `https://api.airtable.com/v0/${this.cloudConfig.baseId}/${tableName}`,
           {
-            method: 'DELETE',
             headers: {
-              'X-Master-Key': this.cloudConfig.apiKey,
+              Authorization: `Bearer ${this.cloudConfig.token}`,
             },
           }
         );
 
-        if (response.ok) {
-          this.cloudConfig.binId = null;
-          this.saveCloudConfig();
-          this.showSuccess(
-            'Cloud data deleted successfully. Local data preserved.'
-          );
-        } else {
-          throw new Error(`Failed to delete cloud data: ${response.status}`);
+        if (listResponse.ok) {
+          const data = await listResponse.json();
+
+          // Delete each record
+          for (const record of data.records) {
+            await fetch(
+              `https://api.airtable.com/v0/${this.cloudConfig.baseId}/${tableName}/${record.id}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${this.cloudConfig.token}`,
+                },
+              }
+            );
+          }
         }
       }
+
+      this.showSuccess(
+        'Airtable data deleted successfully. Local data preserved.'
+      );
     } catch (error) {
-      console.error('Reset cloud data error:', error);
-      this.showError('Failed to delete cloud data');
+      console.error('Reset Airtable data error:', error);
+      this.showError('Failed to delete Airtable data');
     }
   }
 
   /**
-   * Reset all data (local and cloud)
+   * Reset all data (local and cloud) - Enhanced for all 5 tables
    */
   async resetAllData() {
     if (
       !confirm(
-        'This will delete ALL data from both local storage and cloud. This cannot be undone. Continue?'
+        'This will delete ALL data from both local storage and Airtable. This cannot be undone. Continue?'
       )
     ) {
       return;
@@ -250,21 +296,71 @@ class BribeYourselfFitCloud {
 
     if (
       !confirm(
-        'Final warning: This will permanently delete EVERYTHING. Are you sure?'
+        'Final warning: This will permanently delete EVERYTHING from all 5 Airtable tables. Are you sure?'
       )
     ) {
       return;
     }
 
     try {
-      // Delete cloud data first
-      if (this.cloudConfig.isConnected && this.cloudConfig.binId) {
-        await fetch(`https://api.jsonbin.io/v3/b/${this.cloudConfig.binId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-Master-Key': this.cloudConfig.apiKey,
-          },
-        });
+      // Delete Airtable data first (all 5 tables)
+      if (this.cloudConfig.isConnected && this.cloudConfig.baseId) {
+        console.log('🗑️ Clearing all Airtable tables...');
+
+        const tablesToClear = [
+          'Users',
+          'Daily%20Logs',
+          'Settings',
+          'Custom%20Rewards',
+          'Achievements',
+        ];
+
+        for (const tableName of tablesToClear) {
+          console.log(`🗑️ Clearing ${tableName} table...`);
+
+          // Get all records first
+          const listResponse = await fetch(
+            `https://api.airtable.com/v0/${this.cloudConfig.baseId}/${tableName}`,
+            {
+              headers: {
+                Authorization: `Bearer ${this.cloudConfig.token}`,
+              },
+            }
+          );
+
+          if (listResponse.ok) {
+            const data = await listResponse.json();
+            console.log(`Found ${data.records.length} records in ${tableName}`);
+
+            // Delete each record
+            for (const record of data.records) {
+              const deleteResponse = await fetch(
+                `https://api.airtable.com/v0/${this.cloudConfig.baseId}/${tableName}/${record.id}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${this.cloudConfig.token}`,
+                  },
+                }
+              );
+
+              if (deleteResponse.ok) {
+                console.log(`✅ Deleted record ${record.id} from ${tableName}`);
+              } else {
+                console.error(
+                  `❌ Failed to delete record ${record.id} from ${tableName}`
+                );
+              }
+            }
+
+            console.log(`✅ ${tableName} table cleared`);
+          } else {
+            console.error(
+              `❌ Failed to list records from ${tableName}:`,
+              listResponse.status
+            );
+          }
+        }
       }
 
       // Clear all localStorage
@@ -277,11 +373,12 @@ class BribeYourselfFitCloud {
         'byf_cloud_config',
         'byf_auto_sync',
         'byf_sync_notifications',
+        'byf_settings',
       ];
       keysToRemove.forEach((key) => localStorage.removeItem(key));
 
       this.showSuccess(
-        'All data has been reset. Page will reload in 3 seconds...'
+        'All data has been reset from both local storage and all 5 Airtable tables. Page will reload in 3 seconds...'
       );
 
       // Reload page after delay
@@ -295,25 +392,360 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Handle API key update
+   * Handle Airtable credentials update
    */
   async handleUpdateApiKey() {
-    const newApiKey = prompt('Enter your new JSONBin.io API key:');
-    if (!newApiKey) return;
+    const newToken = prompt('Enter your new Airtable Personal Access Token:');
+    if (!newToken) return;
 
-    const oldApiKey = this.cloudConfig.apiKey;
-    this.cloudConfig.apiKey = newApiKey.trim();
+    const newBaseId = prompt('Enter your Airtable Base ID:');
+    if (!newBaseId) return;
+
+    const oldToken = this.cloudConfig.token;
+    const oldBaseId = this.cloudConfig.baseId;
+
+    this.cloudConfig.token = newToken.trim();
+    this.cloudConfig.baseId = newBaseId.trim();
 
     const success = await this.testCloudConnection();
 
     if (success) {
       this.saveCloudConfig();
-      this.showSuccess('API key updated successfully!');
+      this.showSuccess('Airtable credentials updated successfully!');
       this.updateSettingsDisplay();
     } else {
-      this.cloudConfig.apiKey = oldApiKey;
-      this.showError('Invalid API key. Previous key restored.');
+      this.cloudConfig.token = oldToken;
+      this.cloudConfig.baseId = oldBaseId;
+      this.showError('Invalid credentials. Previous credentials restored.');
     }
+  }
+
+  /**
+   * Update settings display
+   */
+  updateSettingsDisplay() {
+    console.log('🔄 Updating settings display...');
+    console.log('Current connection status:', this.cloudConfig.isConnected);
+    console.log('Last sync:', this.cloudConfig.lastSync);
+
+    // Update connection info - CRITICAL FIX
+    const connectionStatusEl = document.getElementById(
+      'settingsConnectionStatus'
+    );
+    if (connectionStatusEl) {
+      const status = this.cloudConfig.isConnected
+        ? '✅ Connected'
+        : '❌ Disconnected';
+      connectionStatusEl.textContent = status;
+      console.log('✅ Connection status updated to:', status);
+    } else {
+      console.warn('❌ settingsConnectionStatus element not found');
+    }
+
+    // Update last sync time - CRITICAL FIX
+    const lastSyncEl = document.getElementById('lastSyncTime');
+    if (lastSyncEl) {
+      if (this.cloudConfig.lastSync) {
+        const lastSync = new Date(this.cloudConfig.lastSync);
+        const syncTime = lastSync.toLocaleString();
+        lastSyncEl.textContent = syncTime;
+        console.log('✅ Last sync time updated to:', syncTime);
+      } else {
+        lastSyncEl.textContent = 'Never';
+        console.log('✅ Last sync time set to: Never');
+      }
+    } else {
+      console.warn('❌ lastSyncTime element not found');
+    }
+
+    // Update pending syncs count
+    const pendingSyncsEl = document.getElementById('pendingSyncs');
+    if (pendingSyncsEl) {
+      const pendingCount = this.syncQueue
+        ? this.syncQueue.filter((item) => !item.synced).length
+        : 0;
+      pendingSyncsEl.textContent = pendingCount.toString();
+      console.log('✅ Pending syncs updated to:', pendingCount);
+
+      // Style based on pending count
+      if (pendingCount > 0) {
+        pendingSyncsEl.style.color = 'var(--accent-warning)';
+        pendingSyncsEl.style.fontWeight = 'bold';
+      } else {
+        pendingSyncsEl.style.color = 'var(--text-secondary)';
+        pendingSyncsEl.style.fontWeight = 'normal';
+      }
+    }
+
+    // Update API key display with masked value
+    const settingsApiKeyEl = document.getElementById('settingsApiKey');
+    if (settingsApiKeyEl && this.cloudConfig.token) {
+      const maskedToken =
+        this.cloudConfig.token.substring(0, 8) + '••••••••••••';
+      settingsApiKeyEl.placeholder = maskedToken;
+      console.log('✅ API key display updated');
+    }
+
+    // Update data statistics
+    const totalEntriesEl = document.getElementById('totalDataEntries');
+    if (totalEntriesEl) {
+      const totalEntries = this.dailyLogs
+        ? Object.keys(this.dailyLogs).length
+        : 0;
+      totalEntriesEl.textContent = totalEntries.toString();
+      console.log('✅ Total entries updated to:', totalEntries);
+    }
+
+    const storageUsedEl = document.getElementById('storageUsed');
+    if (storageUsedEl) {
+      const dataSize = JSON.stringify({
+        user: this.currentUser,
+        dailyLogs: this.dailyLogs,
+        streaks: this.streaks,
+        customRewards: this.customRewards,
+        achievements: this.achievements,
+      }).length;
+      const sizeInKB = Math.round(dataSize / 1024);
+      storageUsedEl.textContent = `~${sizeInKB} KB`;
+      console.log('✅ Storage used updated to:', `~${sizeInKB} KB`);
+    }
+
+    // Update user preferences checkboxes
+    const autoSyncCheckbox = document.getElementById('autoSyncEnabled');
+    if (autoSyncCheckbox) {
+      autoSyncCheckbox.checked = this.autoSyncEnabled;
+      console.log('✅ Auto sync checkbox updated to:', this.autoSyncEnabled);
+    }
+
+    const syncNotificationsCheckbox =
+      document.getElementById('syncNotifications');
+    if (syncNotificationsCheckbox) {
+      syncNotificationsCheckbox.checked = this.syncNotifications;
+      console.log(
+        '✅ Sync notifications checkbox updated to:',
+        this.syncNotifications
+      );
+    }
+
+    // Update theme preference radio buttons
+    if (this.settings) {
+      const themePreference = this.settings.themePreference || 'system';
+      const themeRadio = document.querySelector(
+        `input[value="${themePreference}"]`
+      );
+      if (themeRadio) {
+        themeRadio.checked = true;
+        console.log('✅ Theme preference updated to:', themePreference);
+      }
+
+      // Update unit and format selectors
+      const weightUnit = document.getElementById('weightUnit');
+      const dateFormat = document.getElementById('dateFormat');
+      const weekStart = document.getElementById('weekStart');
+
+      if (weightUnit && this.settings.weightUnit) {
+        weightUnit.value = this.settings.weightUnit;
+        console.log('✅ Weight unit updated to:', this.settings.weightUnit);
+      }
+      if (dateFormat && this.settings.dateFormat) {
+        dateFormat.value = this.settings.dateFormat;
+        console.log('✅ Date format updated to:', this.settings.dateFormat);
+      }
+      if (weekStart && this.settings.weekStart) {
+        weekStart.value = this.settings.weekStart;
+        console.log('✅ Week start updated to:', this.settings.weekStart);
+      }
+
+      // Update goal threshold checkboxes
+      const allowPartialSteps = document.getElementById('allowPartialSteps');
+      const allowPartialExercise = document.getElementById(
+        'allowPartialExercise'
+      );
+      const strictWellness = document.getElementById('strictWellness');
+
+      if (allowPartialSteps) {
+        allowPartialSteps.checked = this.settings.allowPartialSteps || false;
+      }
+      if (allowPartialExercise) {
+        allowPartialExercise.checked =
+          this.settings.allowPartialExercise || false;
+      }
+      if (strictWellness) {
+        strictWellness.checked = this.settings.strictWellness || false;
+      }
+    }
+
+    // Update daily goals inputs
+    if (this.currentUser) {
+      const settingsSteps = document.getElementById('settingsSteps');
+      const settingsExercise = document.getElementById('settingsExercise');
+      const settingsWater = document.getElementById('settingsWater');
+      const settingsStartingWeight = document.getElementById(
+        'settingsStartingWeight'
+      );
+      const settingsGoalWeight = document.getElementById('settingsGoalWeight');
+
+      if (settingsSteps) {
+        settingsSteps.value = this.currentUser.dailySteps;
+        console.log('✅ Steps goal updated to:', this.currentUser.dailySteps);
+      }
+      if (settingsExercise) {
+        settingsExercise.value = this.currentUser.dailyExercise;
+        console.log(
+          '✅ Exercise goal updated to:',
+          this.currentUser.dailyExercise
+        );
+      }
+      if (settingsWater) {
+        settingsWater.value = this.currentUser.dailyWater;
+        console.log('✅ Water goal updated to:', this.currentUser.dailyWater);
+      }
+
+      // Handle weight conversion for settings inputs
+      const weightUnit = this.settings?.weightUnit || 'lbs';
+      if (settingsStartingWeight) {
+        const displayStartingWeight =
+          weightUnit === 'kg'
+            ? (this.currentUser.startingWeight * 0.453592).toFixed(1)
+            : this.currentUser.startingWeight;
+        settingsStartingWeight.value = displayStartingWeight;
+        console.log(
+          '✅ Settings starting weight updated to:',
+          displayStartingWeight,
+          weightUnit
+        );
+      }
+      if (settingsGoalWeight) {
+        const displayGoalWeight =
+          weightUnit === 'kg'
+            ? (this.currentUser.goalWeight * 0.453592).toFixed(1)
+            : this.currentUser.goalWeight;
+        settingsGoalWeight.value = displayGoalWeight;
+        console.log(
+          '✅ Settings goal weight updated to:',
+          displayGoalWeight,
+          weightUnit
+        );
+      }
+    }
+
+    console.log('🎉 Settings display update complete');
+  }
+
+  /**
+   * Update all weight displays when unit changes
+   */
+  updateWeightDisplays() {
+    const weightUnit = this.settings?.weightUnit || 'lbs';
+    console.log(`🔄 Updating weight displays to ${weightUnit}`);
+    console.log('Settings check:', this.settings);
+
+    if (!this.currentUser) {
+      console.log('❌ No current user data available');
+      return;
+    }
+
+    // Update quick stats in sidebar
+    const currentWeightEl = document.getElementById('currentWeightDisplay');
+    const goalWeightEl = document.getElementById('goalWeightDisplay');
+    const weightToGoEl = document.getElementById('weightToGoDisplay');
+
+    if (currentWeightEl) {
+      const currentWeight =
+        weightUnit === 'kg'
+          ? (this.currentUser.currentWeight * 0.453592).toFixed(1)
+          : this.currentUser.currentWeight;
+      currentWeightEl.textContent = `${currentWeight} ${weightUnit}`;
+      console.log(
+        `✅ Updated current weight to: ${currentWeight} ${weightUnit}`
+      );
+    }
+
+    if (goalWeightEl) {
+      const goalWeight =
+        weightUnit === 'kg'
+          ? (this.currentUser.goalWeight * 0.453592).toFixed(1)
+          : this.currentUser.goalWeight;
+      goalWeightEl.textContent = `${goalWeight} ${weightUnit}`;
+      console.log(`✅ Updated goal weight to: ${goalWeight} ${weightUnit}`);
+    }
+
+    if (weightToGoEl) {
+      const currentWeight =
+        weightUnit === 'kg'
+          ? this.currentUser.currentWeight * 0.453592
+          : this.currentUser.currentWeight;
+      const goalWeight =
+        weightUnit === 'kg'
+          ? this.currentUser.goalWeight * 0.453592
+          : this.currentUser.goalWeight;
+      const weightToGo = Math.abs(currentWeight - goalWeight);
+      weightToGoEl.textContent = `${weightToGo.toFixed(1)} ${weightUnit}`;
+      console.log(
+        `✅ Updated weight to go: ${weightToGo.toFixed(1)} ${weightUnit}`
+      );
+    }
+
+    // Update form labels - fix the duplicate issue
+    const weightLabels = document.querySelectorAll(
+      'label[for*="Weight"], label[for*="weight"]'
+    );
+    console.log(`Found ${weightLabels.length} weight labels to update`);
+
+    weightLabels.forEach((label, index) => {
+      const originalText = label.textContent;
+      // Remove any existing unit indicators and add the current one
+      let newText = originalText.replace(/\s*\([^)]*\)[^)]*$/g, ''); // Remove (lbs) or (kg) and anything after
+      newText = newText.replace(/\s*-\s*(lbs|kg)\s*$/g, ''); // Remove trailing - lbs or - kg
+      newText = `${newText} (${weightUnit})`;
+
+      if (originalText !== newText) {
+        label.textContent = newText;
+        console.log(
+          `✅ Updated label ${index}: "${originalText}" → "${newText}"`
+        );
+      }
+    });
+
+    // Update any chart labels if weight chart is visible
+    if (this.currentTab === 'charts') {
+      console.log('🔄 Re-rendering weight chart for unit change');
+      setTimeout(() => {
+        this.renderWeightChart();
+      }, 100);
+    }
+
+    // Update settings input values if we're on the settings tab
+    if (this.currentTab === 'settings' && this.currentUser) {
+      const settingsStartingWeight = document.getElementById(
+        'settingsStartingWeight'
+      );
+      const settingsGoalWeight = document.getElementById('settingsGoalWeight');
+
+      if (settingsStartingWeight) {
+        const displayStartingWeight =
+          weightUnit === 'kg'
+            ? (this.currentUser.startingWeight * 0.453592).toFixed(1)
+            : this.currentUser.startingWeight;
+        settingsStartingWeight.value = displayStartingWeight;
+        console.log(
+          `✅ Settings starting weight updated to: ${displayStartingWeight} ${weightUnit}`
+        );
+      }
+
+      if (settingsGoalWeight) {
+        const displayGoalWeight =
+          weightUnit === 'kg'
+            ? (this.currentUser.goalWeight * 0.453592).toFixed(1)
+            : this.currentUser.goalWeight;
+        settingsGoalWeight.value = displayGoalWeight;
+        console.log(
+          `✅ Settings goal weight updated to: ${displayGoalWeight} ${weightUnit}`
+        );
+      }
+    }
+
+    console.log(`✅ Weight displays update complete for ${weightUnit}`);
   }
 
   /**
@@ -592,6 +1024,11 @@ class BribeYourselfFitCloud {
         this.loadRewardsTab();
       } else if (tabName === 'settings') {
         this.loadSettingsTab();
+        // Force settings display update after tab switch
+        setTimeout(() => {
+          console.log('Force updating settings after tab switch...');
+          this.updateSettingsDisplay();
+        }, 200);
       }
     } catch (error) {
       console.error(`Error loading ${tabName} tab:`, error);
@@ -616,7 +1053,7 @@ class BribeYourselfFitCloud {
    * Initialize cloud sync after app load
    */
   async initializeCloudSync() {
-    if (this.cloudConfig.apiKey) {
+    if (this.cloudConfig.token && this.cloudConfig.baseId) {
       await this.testCloudConnection();
       if (this.cloudConfig.isConnected) {
         await this.performInitialSync();
@@ -627,51 +1064,86 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Test connection to JSONBin.io
+   * Test connection to Airtable
    */
   async testCloudConnection() {
-    if (!this.cloudConfig.apiKey) {
-      this.updateConnectionStatus('error', 'No API key configured');
+    if (!this.cloudConfig.token || !this.cloudConfig.baseId) {
+      this.updateConnectionStatus('error', 'Token and Base ID required');
       return false;
     }
 
     try {
-      this.updateConnectionStatus('testing', 'Testing connection...');
+      this.updateConnectionStatus('testing', 'Testing Airtable connection...');
 
-      // Test API key validity by trying to create a test bin
-      const response = await fetch('https://api.jsonbin.io/v3/b', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': this.cloudConfig.apiKey,
-        },
-        body: JSON.stringify({
-          test: true,
-          timestamp: new Date().toISOString(),
-        }),
-      });
+      // Test connection by trying to read the base schema
+      const response = await fetch(
+        `https://api.airtable.com/v0/meta/bases/${this.cloudConfig.baseId}/tables`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${this.cloudConfig.token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
 
-        // If this is a new setup, use this bin for storage
-        if (!this.cloudConfig.binId) {
-          this.cloudConfig.binId = data.metadata.id;
-          this.saveCloudConfig();
-        } else {
-          // Clean up test bin if we already have a storage bin
-          await this.deleteTestBin(data.metadata.id);
+        // Verify we have the expected tables
+        const tableNames = data.tables.map((table) => table.name);
+        const requiredTables = [
+          'Users',
+          'Daily Logs',
+          'Settings',
+          'Custom Rewards',
+          'Achievements',
+        ];
+        const missingTables = requiredTables.filter(
+          (table) => !tableNames.includes(table)
+        );
+
+        if (missingTables.length > 0) {
+          this.updateConnectionStatus(
+            'error',
+            `Missing required tables: ${missingTables.join(', ')}`
+          );
+          return false;
         }
+
+        // Store table IDs for future use
+        this.cloudConfig.tableIds = {};
+        data.tables.forEach((table) => {
+          switch (table.name) {
+            case 'Users':
+              this.cloudConfig.tableIds.users = table.id;
+              break;
+            case 'Daily Logs':
+              this.cloudConfig.tableIds.dailyLogs = table.id;
+              break;
+            case 'Settings':
+              this.cloudConfig.tableIds.settings = table.id;
+              break;
+            case 'Custom Rewards':
+              this.cloudConfig.tableIds.customRewards = table.id;
+              break;
+            case 'Achievements':
+              this.cloudConfig.tableIds.achievements = table.id;
+              break;
+          }
+        });
 
         this.cloudConfig.isConnected = true;
         this.cloudConfig.retryCount = 0;
-        this.updateConnectionStatus('connected', 'Connected to cloud storage');
+        this.updateConnectionStatus('connected', 'Connected to Airtable base');
         return true;
       } else {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Airtable API Error: ${response.status} ${response.statusText}`
+        );
       }
     } catch (error) {
-      console.error('Cloud connection test failed:', error);
+      console.error('Airtable connection test failed:', error);
       this.cloudConfig.isConnected = false;
       this.updateConnectionStatus(
         'error',
@@ -682,57 +1154,97 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Validate API key format before testing connection
+   * Validate Airtable token format before testing connection
    */
-  validateApiKeyFormat(apiKey) {
-    if (!apiKey || apiKey.trim().length === 0) {
-      return { valid: false, message: 'API key cannot be empty' };
-    }
-
-    // JSONBin.io API keys typically start with $2a$ (bcrypt format)
-    if (!apiKey.startsWith('$2a$') && !apiKey.startsWith('$2b$')) {
+  validateApiKeyFormat(token) {
+    // Airtable Personal Access Token format validation
+    if (!token || typeof token !== 'string') {
       return {
         valid: false,
-        message:
-          'API key format appears incorrect. JSONBin.io keys typically start with $2a$ or $2b$',
+        message: 'Token is required',
       };
     }
 
-    if (apiKey.length < 50) {
+    const trimmedToken = token.trim();
+
+    // Airtable Personal Access Tokens start with 'pat' and are typically 17+ characters
+    if (!trimmedToken.startsWith('pat') || trimmedToken.length < 17) {
       return {
         valid: false,
         message:
-          'API key appears too short. Please verify you copied the complete key.',
+          'Airtable Personal Access Token should start with "pat" and be at least 17 characters long',
       };
     }
 
-    return { valid: true, message: 'API key format looks correct' };
+    // Check for valid characters (alphanumeric and specific symbols)
+    const validTokenPattern = /^pat[A-Za-z0-9._-]+$/;
+    if (!validTokenPattern.test(trimmedToken)) {
+      return {
+        valid: false,
+        message:
+          'Token contains invalid characters. Should only contain letters, numbers, dots, hyphens, and underscores',
+      };
+    }
+
+    return {
+      valid: true,
+      message: 'Token format looks correct',
+    };
   }
 
   /**
-   * Delete test bin (cleanup)
+   * Validate Airtable Base ID format
+   */
+  validateBaseIdFormat(baseId) {
+    // Airtable Base ID format validation
+    if (!baseId || typeof baseId !== 'string') {
+      return {
+        valid: false,
+        message: 'Base ID is required',
+      };
+    }
+
+    const trimmedBaseId = baseId.trim();
+
+    // Airtable Base IDs start with 'app' and are typically 17 characters total
+    if (!trimmedBaseId.startsWith('app') || trimmedBaseId.length !== 17) {
+      return {
+        valid: false,
+        message:
+          'Airtable Base ID should start with "app" and be exactly 17 characters long',
+      };
+    }
+
+    // Check for valid characters (alphanumeric)
+    const validBaseIdPattern = /^app[A-Za-z0-9]+$/;
+    if (!validBaseIdPattern.test(trimmedBaseId)) {
+      return {
+        valid: false,
+        message:
+          'Base ID contains invalid characters. Should only contain letters and numbers after "app"',
+      };
+    }
+
+    return {
+      valid: true,
+      message: 'Base ID format looks correct',
+    };
+  }
+
+  /**
+   * Delete test data (cleanup) - Not needed for Airtable
    */
   async deleteTestBin(binId) {
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-Master-Key': this.cloudConfig.apiKey,
-        },
-      });
-    } catch (error) {
-      console.warn('Failed to delete test bin:', error);
-    }
+    // Airtable doesn't need test bin cleanup like JSONBin
+    // This function is kept for compatibility but does nothing
+    console.log('Airtable test cleanup - no action needed');
   }
 
   /**
    * Perform initial sync when app loads
    */
   async performInitialSync() {
-    // Reset sync flag first to prevent stuck states
-    this.cloudConfig.syncInProgress = false;
-
-    if (!this.cloudConfig.isConnected || !this.cloudConfig.binId) return;
+    if (!this.cloudConfig.isConnected || !this.cloudConfig.baseId) return;
 
     try {
       // Try to load data from cloud
@@ -762,101 +1274,739 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Load data from JSONBin.io
+   * Load data from Airtable (simplified for now)
    */
   async loadFromCloud() {
-    if (!this.cloudConfig.binId || !this.cloudConfig.apiKey) return null;
+    if (!this.cloudConfig.baseId || !this.cloudConfig.token) return null;
 
     try {
-      const response = await fetch(
-        `https://api.jsonbin.io/v3/b/${this.cloudConfig.binId}/latest`,
-        {
-          headers: {
-            'X-Master-Key': this.cloudConfig.apiKey,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.record;
-      } else if (response.status === 404) {
-        // Bin doesn't exist yet, that's okay
-        return null;
-      } else {
-        throw new Error(`Failed to load from cloud: ${response.status}`);
-      }
+      // For now, we'll return null to focus on saving functionality
+      // This would need to be implemented to read from all Airtable tables
+      // and reconstruct the data structure
+      console.log('Airtable data loading - simplified for initial version');
+      return null;
     } catch (error) {
-      console.error('Error loading from cloud:', error);
+      console.error('Error loading from Airtable:', error);
       throw error;
     }
   }
 
   /**
-   * Save data to JSONBin.io
+   * Save data to Airtable
    */
   async saveToCloud() {
-    if (!this.cloudConfig.isConnected || this.cloudConfig.syncInProgress)
-      return;
+    console.log('saveToCloud called');
+
+    // Reset sync flag first to prevent stuck states
+    this.cloudConfig.syncInProgress = false;
+    console.log('isConnected:', this.cloudConfig.isConnected);
+    console.log('syncInProgress:', this.cloudConfig.syncInProgress);
+    console.log('token exists:', !!this.cloudConfig.token);
+    console.log('baseId exists:', !!this.cloudConfig.baseId);
+
+    if (!this.cloudConfig.isConnected || this.cloudConfig.syncInProgress) {
+      console.log('❌ Cannot sync: not connected or sync in progress');
+      return false;
+    }
+
+    // Force connection check if we have credentials but isConnected is false
+    if (
+      !this.cloudConfig.isConnected &&
+      this.cloudConfig.token &&
+      this.cloudConfig.baseId
+    ) {
+      console.log('Have credentials but not connected, testing connection...');
+      const connected = await this.testCloudConnection();
+      if (!connected) {
+        console.log('❌ Connection test failed');
+        return false;
+      }
+    }
 
     try {
       this.cloudConfig.syncInProgress = true;
       this.updateSyncStatus('syncing');
 
-      const dataToSync = {
-        user: this.currentUser,
-        dailyLogs: this.dailyLogs,
-        streaks: this.streaks,
-        customRewards: this.customRewards,
-        achievements: this.achievements,
-        lastSync: new Date().toISOString(),
-        version: '1.0.0-cloud',
-      };
+      // Save to Users table
+      await this.saveUserToAirtable();
 
-      const url = this.cloudConfig.binId
-        ? `https://api.jsonbin.io/v3/b/${this.cloudConfig.binId}`
-        : 'https://api.jsonbin.io/v3/b';
+      // Save daily logs to Daily Logs table
+      await this.saveDailyLogsToAirtable();
 
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': this.cloudConfig.apiKey,
-        },
-        body: JSON.stringify(dataToSync),
-      });
+      // Save streaks, rewards, and achievements
+      await this.saveAppDataToAirtable();
 
-      if (response.ok) {
-        const result = await response.json();
+      this.cloudConfig.lastSync = new Date().toISOString();
+      this.cloudConfig.retryCount = 0;
+      this.saveCloudConfig();
 
-        // Store bin ID if this was the first save
-        if (!this.cloudConfig.binId) {
-          this.cloudConfig.binId = result.metadata.id;
-        }
+      this.updateSyncStatus('synced');
+      this.processSyncQueue();
 
-        this.cloudConfig.lastSync = new Date().toISOString();
-        this.cloudConfig.retryCount = 0;
-        this.saveCloudConfig();
-
-        this.updateSyncStatus('synced');
-        this.processSyncQueue();
-
-        if (this.syncNotifications) {
-          this.showSuccess('☁️ Data synced to cloud', 2000);
-        }
-
-        return true;
-      } else {
-        throw new Error(
-          `Sync failed: ${response.status} ${response.statusText}`
-        );
+      if (this.syncNotifications) {
+        this.showSuccess('☁️ Data synced to Airtable', 2000);
       }
+
+      console.log('✅ Sync completed successfully');
+
+      // Mark all pending items as synced
+      this.markSyncQueueItemsCompleted('dailyLog');
+      this.markSyncQueueItemsCompleted('customReward');
+      this.markSyncQueueItemsCompleted('achievement');
+      this.markSyncQueueItemsCompleted('settings');
+
+      // Force process the queue to update pending count
+      this.processSyncQueue();
+
+      // Update settings display if we're on settings tab
+      if (this.currentTab === 'settings') {
+        setTimeout(() => this.updateSettingsDisplay(), 100);
+      }
+
+      return true;
     } catch (error) {
-      console.error('Error saving to cloud:', error);
+      console.error('❌ Error saving to Airtable:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response,
+      });
       this.handleSyncError(error);
       return false;
     } finally {
       this.cloudConfig.syncInProgress = false;
+      console.log('✅ syncInProgress reset to false');
+    }
+  }
+
+  /**
+   * Save user profile to Airtable Users table (with duplicate prevention)
+   */
+  async saveUserToAirtable() {
+    if (!this.currentUser) return;
+
+    try {
+      // First, check if a user record already exists
+      const existingResponse = await fetch(
+        `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Users?filterByFormula={User ID}='user1'`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.cloudConfig.token}`,
+          },
+        }
+      );
+
+      if (existingResponse.ok) {
+        const existingData = await existingResponse.json();
+
+        if (existingData.records.length > 0) {
+          // Record exists, update it
+          const recordId = existingData.records[0].id;
+          await this.updateUserRecord(recordId);
+        } else {
+          // No record exists, create new one
+          await this.createUserRecord();
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error processing user data:', error);
+    }
+  }
+
+  /**
+   * Create new user record
+   */
+  async createUserRecord() {
+    const userData = {
+      fields: {
+        'User ID': 'user1',
+        'Starting Weight': this.currentUser.startingWeight,
+        'Current Weight': this.currentUser.currentWeight,
+        'Goal Weight': this.currentUser.goalWeight,
+        'Daily Steps': this.currentUser.dailySteps,
+        'Daily Exercise': this.currentUser.dailyExercise,
+        'Daily Water': this.currentUser.dailyWater,
+        'Setup Date': this.convertDateForAirtable(
+          this.currentUser.setupDate.split('T')[0]
+        ),
+        'Last Weight Update': this.currentUser.lastWeightUpdate
+          ? this.currentUser.lastWeightUpdate.split('T')[0]
+          : new Date().toISOString().split('T')[0],
+      },
+    };
+
+    const response = await fetch(
+      `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Users`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.cloudConfig.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    if (response.ok) {
+      console.log('✅ Created user profile in Airtable');
+    } else {
+      const errorText = await response.text();
+      console.error(
+        '❌ Failed to create user profile:',
+        response.status,
+        errorText
+      );
+    }
+  }
+
+  /**
+   * Update existing user record
+   */
+  async updateUserRecord(recordId) {
+    const userData = {
+      fields: {
+        'Current Weight': this.currentUser.currentWeight,
+        'Goal Weight': this.currentUser.goalWeight,
+        'Daily Steps': this.currentUser.dailySteps,
+        'Daily Exercise': this.currentUser.dailyExercise,
+        'Daily Water': this.currentUser.dailyWater,
+        'Starting Weight': this.currentUser.startingWeight,
+        'Last Weight Update': this.currentUser.lastWeightUpdate
+          ? this.currentUser.lastWeightUpdate.split('T')[0]
+          : new Date().toISOString().split('T')[0],
+      },
+    };
+
+    const response = await fetch(
+      `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Users/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${this.cloudConfig.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    if (response.ok) {
+      console.log('✅ Updated user profile in Airtable');
+    } else {
+      const errorText = await response.text();
+      console.error(
+        '❌ Failed to update user profile:',
+        response.status,
+        errorText
+      );
+    }
+  }
+
+  /**
+   * Save daily logs to Airtable Daily Logs table (with duplicate prevention)
+   */
+  async saveDailyLogsToAirtable() {
+    const logEntries = Object.values(this.dailyLogs);
+
+    for (const log of logEntries) {
+      // Convert date format from YYYY-MM-DD to M/D/YYYY for Airtable search
+      const searchDate = this.convertDateForAirtable(log.date);
+
+      // First, check if a record already exists for this date
+      try {
+        const existingResponse = await fetch(
+          `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Daily%20Logs?filterByFormula=IS_SAME(Date,'${searchDate}','day')`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.cloudConfig.token}`,
+            },
+          }
+        );
+
+        if (existingResponse.ok) {
+          const existingData = await existingResponse.json();
+
+          if (existingData.records.length > 0) {
+            // Record exists, update it
+            const recordId = existingData.records[0].id;
+            await this.updateDailyLogRecord(recordId, log);
+          } else {
+            // No record exists, create new one
+            await this.createDailyLogRecord(log);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Error processing log for ${log.date}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Convert date from YYYY-MM-DD to M/D/YYYY format for Airtable
+   */
+  convertDateForAirtable(dateString) {
+    // Parse date string manually to avoid timezone issues
+    const [year, month, day] = dateString.split('-');
+    return `${parseInt(month)}/${parseInt(day)}/${year}`;
+  }
+
+  /**
+   * Create new daily log record
+   */
+  async createDailyLogRecord(log) {
+    const logData = {
+      fields: {
+        Date: log.date,
+        Weight: log.weight || null,
+        Steps: log.steps || 0,
+        'Exercise Minutes': log.exerciseMinutes || 0,
+        'Exercise Types': log.exerciseTypes || [],
+        Water: log.water || 0,
+        'Wellness Score': log.wellnessScore || 0,
+        'Wellness Items': log.wellnessItems || [],
+        Timestamp: log.timestamp,
+      },
+    };
+
+    const response = await fetch(
+      `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Daily%20Logs`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.cloudConfig.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(logData),
+      }
+    );
+
+    if (response.ok) {
+      console.log(`✅ Created new log for ${log.date}`);
+    } else {
+      const errorText = await response.text();
+      console.error(
+        `❌ Failed to create log for ${log.date}:`,
+        response.status,
+        errorText
+      );
+    }
+  }
+
+  /**
+   * Update existing daily log record
+   */
+  async updateDailyLogRecord(recordId, log) {
+    const logData = {
+      fields: {
+        Date: log.date,
+        Weight: log.weight || null,
+        Steps: log.steps || 0,
+        'Exercise Minutes': log.exerciseMinutes || 0,
+        'Exercise Types': log.exerciseTypes || [],
+        Water: log.water || 0,
+        'Wellness Score': log.wellnessScore || 0,
+        'Wellness Items': log.wellnessItems || [],
+        Timestamp: log.timestamp,
+      },
+    };
+
+    const response = await fetch(
+      `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Daily%20Logs/${recordId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${this.cloudConfig.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(logData),
+      }
+    );
+
+    if (response.ok) {
+      console.log(`✅ Updated existing log for ${log.date}`);
+    } else {
+      const errorText = await response.text();
+      console.error(
+        `❌ Failed to update log for ${log.date}:`,
+        response.status,
+        errorText
+      );
+    }
+  }
+
+  /**
+   * Save app data (streaks, rewards, achievements) to Airtable
+   */
+  async saveAppDataToAirtable() {
+    console.log('📊 Saving app data to Airtable...');
+
+    // Save settings to Settings table
+    await this.saveSettingsToAirtable();
+
+    // Save custom rewards to Custom Rewards table
+    await this.saveCustomRewardsToAirtable();
+
+    // Save achievements to Achievements table
+    await this.saveAchievementsToAirtable();
+
+    console.log('✅ All app data saved to Airtable');
+  }
+
+  /**
+   * Save settings to Airtable Settings table (with enhanced duplicate prevention)
+   */
+  async saveSettingsToAirtable() {
+    try {
+      // Check if settings record exists
+      const existingResponse = await fetch(
+        `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Settings?filterByFormula={Setting Name}='user1_settings'`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.cloudConfig.token}`,
+          },
+        }
+      );
+
+      if (existingResponse.ok) {
+        const existingData = await existingResponse.json();
+
+        const currentSettings = {
+          'Setting Name': 'user1_settings',
+          'Theme Preference': this.settings?.themePreference || 'system',
+          'Weight Unit': this.settings?.weightUnit || 'lbs',
+          'Date Format': this.settings?.dateFormat || 'US',
+          'Week Start': this.settings?.weekStart || 'sunday',
+          'Allow Partial Steps': this.settings?.allowPartialSteps || false,
+          'Allow Partial Exercise':
+            this.settings?.allowPartialExercise || false,
+          'Strict Wellness': this.settings?.strictWellness || false,
+          'Last Updated': new Date().toISOString().split('T')[0], // Add current date
+          Version: '1.1.0-airtable',
+        };
+
+        if (existingData.records.length > 0) {
+          // Check if settings have actually changed
+          const existingRecord = existingData.records[0];
+          const settingsChanged = this.hasSettingsChanged(
+            existingRecord.fields,
+            currentSettings
+          );
+
+          if (settingsChanged) {
+            console.log('🔧 Settings changed, updating record...');
+            // Update existing record
+            const recordId = existingRecord.id;
+            const response = await fetch(
+              `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Settings/${recordId}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  Authorization: `Bearer ${this.cloudConfig.token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fields: currentSettings }),
+              }
+            );
+
+            if (response.ok) {
+              console.log('✅ Settings updated in Airtable');
+            }
+          } else {
+            console.log('⏭️ Settings unchanged, skipping sync');
+          }
+        } else {
+          // Create new record
+          console.log('➕ Creating new settings record...');
+          const response = await fetch(
+            `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Settings`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${this.cloudConfig.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ fields: currentSettings }),
+            }
+          );
+
+          if (response.ok) {
+            console.log('✅ Settings created in Airtable');
+          }
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Settings save failed, will retry later:', error.message);
+    }
+  }
+
+  /**
+   * Check if settings have actually changed
+   */
+  hasSettingsChanged(existingFields, newFields) {
+    const fieldsToCheck = [
+      'Theme Preference',
+      'Weight Unit',
+      'Date Format',
+      'Week Start',
+      'Allow Partial Steps',
+      'Allow Partial Exercise',
+      'Strict Wellness',
+    ];
+
+    return fieldsToCheck.some((field) => {
+      const existing = existingFields[field];
+      const newValue = newFields[field];
+
+      // Handle boolean conversion for checkboxes
+      if (typeof newValue === 'boolean') {
+        return Boolean(existing) !== newValue;
+      }
+
+      return existing !== newValue;
+    });
+  }
+
+  /**
+   * Save custom rewards to Airtable Custom Rewards table (with enhanced debugging)
+   */
+  async saveCustomRewardsToAirtable() {
+    console.log('🎁 Starting custom rewards sync...');
+    console.log('Custom rewards to sync:', this.customRewards);
+
+    if (!this.customRewards || this.customRewards.length === 0) {
+      console.log('📝 No custom rewards to sync (array empty or undefined)');
+      return;
+    }
+
+    console.log(`📝 Found ${this.customRewards.length} custom rewards to sync`);
+
+    try {
+      // First, get existing rewards to avoid duplicates
+      console.log('🔍 Checking existing rewards in Airtable...');
+      const existingResponse = await fetch(
+        `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Custom%20Rewards`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.cloudConfig.token}`,
+          },
+        }
+      );
+
+      let existingRewards = [];
+      if (existingResponse.ok) {
+        const existingData = await existingResponse.json();
+        existingRewards = existingData.records;
+        console.log(
+          `🔍 Found ${existingRewards.length} existing rewards in Airtable`
+        );
+      } else {
+        console.warn(
+          '⚠️ Failed to fetch existing rewards:',
+          existingResponse.status,
+          existingResponse.statusText
+        );
+      }
+
+      // Sync each custom reward
+      for (const [index, reward] of this.customRewards.entries()) {
+        console.log(`🎁 Processing reward ${index + 1}:`, reward);
+
+        // Check if this reward already exists
+        const exists = existingRewards.some(
+          (existing) =>
+            existing.fields.Description === reward.description &&
+            existing.fields['Target Type'] ===
+              (reward.type === 'streak'
+                ? 'overall-streak'
+                : reward.type === 'weight'
+                ? 'weight-loss'
+                : 'overall-streak')
+        );
+
+        if (exists) {
+          console.log(
+            `⏭️ Reward already exists in Airtable: ${reward.description}`
+          );
+          continue;
+        }
+
+        console.log(
+          `➕ Creating new reward in Airtable: ${reward.description}`
+        );
+
+        // Map the reward type to match Airtable options
+        let targetType = reward.type;
+        if (reward.type === 'streak') targetType = 'overall-streak';
+        if (reward.type === 'weight') targetType = 'weight-loss';
+        if (reward.type === 'combo') targetType = 'overall-streak'; // or create a combo option if needed
+
+        const rewardData = {
+          fields: {
+            Title: reward.description,
+            Description: reward.description,
+            'Target Type': targetType,
+            'Target Value': reward.streakDays || reward.weightLoss || null,
+            Claimed: false,
+            'Created Date': reward.createdDate
+              ? reward.createdDate.split('T')[0]
+              : new Date().toISOString().split('T')[0],
+          },
+        };
+
+        console.log('📤 Sending reward data to Airtable:', rewardData);
+
+        const response = await fetch(
+          `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Custom%20Rewards`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${this.cloudConfig.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(rewardData),
+          }
+        );
+
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log(
+            `✅ Custom reward synced successfully: ${reward.description}`
+          );
+          console.log('📥 Airtable response:', responseData);
+        } else {
+          const errorText = await response.text();
+          console.error(`❌ Failed to sync reward "${reward.description}":`, {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText,
+          });
+        }
+      }
+
+      console.log('🎁 Custom rewards sync completed');
+    } catch (error) {
+      console.error('❌ Custom rewards sync failed with error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+      });
+    }
+  }
+
+  /**
+   * Save achievements to Airtable Achievements table (with duplicate prevention)
+   */
+  async saveAchievementsToAirtable() {
+    if (!this.achievements || this.achievements.length === 0) {
+      console.log('🏆 No achievements to sync');
+      return;
+    }
+
+    console.log('🏆 Starting achievements sync...');
+    console.log('🏆 Achievements to sync:', this.achievements);
+
+    try {
+      // First, get existing achievements to avoid duplicates
+      const existingResponse = await fetch(
+        `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Achievements`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.cloudConfig.token}`,
+          },
+        }
+      );
+
+      let existingAchievements = [];
+      if (existingResponse.ok) {
+        const existingData = await existingResponse.json();
+        existingAchievements = existingData.records;
+        console.log(
+          `🔍 Found ${existingAchievements.length} existing achievements in Airtable`
+        );
+      }
+
+      // Sync each achievement with duplicate checking
+      for (const achievement of this.achievements) {
+        console.log(`🏆 Processing achievement: ${achievement.title}`);
+
+        // Check if this achievement already exists
+        const exists = existingAchievements.some(
+          (existing) =>
+            existing.fields.Type ===
+              (achievement.type === 'streak'
+                ? 'overall-streak'
+                : achievement.type === 'weight'
+                ? 'weight-loss'
+                : 'overall-streak') &&
+            existing.fields.Value === achievement.value &&
+            existing.fields.Title === achievement.title
+        );
+
+        if (exists) {
+          console.log(
+            `⏭️ Achievement already exists in Airtable: ${achievement.title}`
+          );
+          continue;
+        }
+
+        console.log(
+          `➕ Creating new achievement in Airtable: ${achievement.title}`
+        );
+
+        // Map the achievement type to match Airtable options
+        let achievementType = achievement.type;
+        if (achievement.type === 'streak') achievementType = 'overall-streak';
+        if (achievement.type === 'weight') achievementType = 'weight-loss';
+        if (achievement.type === 'combo') achievementType = 'overall-streak';
+
+        const achievementData = {
+          fields: {
+            Title: achievement.title,
+            Type: achievementType,
+            Description: achievement.description,
+            'Date Achieved': achievement.claimedDate
+              ? achievement.claimedDate.split('T')[0]
+              : new Date().toISOString().split('T')[0],
+            Value: achievement.value,
+          },
+        };
+
+        console.log(
+          '🏆 Sending achievement data to Airtable:',
+          achievementData
+        );
+
+        const response = await fetch(
+          `https://api.airtable.com/v0/${this.cloudConfig.baseId}/Achievements`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${this.cloudConfig.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(achievementData),
+          }
+        );
+
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log(`✅ Achievement synced: ${achievement.title}`);
+          console.log('📥 Airtable response:', responseData);
+        } else {
+          const errorText = await response.text();
+          console.error(
+            `❌ Failed to sync achievement "${achievement.title}":`,
+            {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+            }
+          );
+        }
+      }
+
+      console.log('🏆 Achievements sync completed');
+    } catch (error) {
+      console.error('❌ Achievements sync failed with error:', error);
     }
   }
 
@@ -922,16 +2072,24 @@ class BribeYourselfFitCloud {
    * Check connection health periodically
    */
   async checkConnectionHealth() {
-    if (!this.cloudConfig.apiKey || !navigator.onLine) return false;
+    if (
+      !this.cloudConfig.token ||
+      !this.cloudConfig.baseId ||
+      !navigator.onLine
+    )
+      return false;
 
     try {
-      // Simple connectivity test
-      const response = await fetch('https://api.jsonbin.io/v3/b', {
-        method: 'HEAD',
-        headers: { 'X-Master-Key': this.cloudConfig.apiKey },
-      });
+      // Simple connectivity test using Airtable API
+      const response = await fetch(
+        `https://api.airtable.com/v0/meta/bases/${this.cloudConfig.baseId}/tables`,
+        {
+          method: 'HEAD',
+          headers: { Authorization: `Bearer ${this.cloudConfig.token}` },
+        }
+      );
 
-      const isHealthy = response.status !== 0;
+      const isHealthy = response.status !== 0 && response.ok;
 
       if (isHealthy && !this.cloudConfig.isConnected) {
         // Connection restored
@@ -1004,6 +2162,24 @@ class BribeYourselfFitCloud {
   }
 
   /**
+   * Mark sync queue items as completed
+   */
+  markSyncQueueItemsCompleted(action) {
+    let markedCount = 0;
+    this.syncQueue.forEach((item) => {
+      if (item.action === action && !item.synced) {
+        item.synced = true;
+        markedCount++;
+      }
+    });
+
+    if (markedCount > 0) {
+      console.log(`✅ Marked ${markedCount} ${action} items as synced`);
+      this.processSyncQueue();
+    }
+  }
+
+  /**
    * Start automatic sync interval
    */
   startAutoSync() {
@@ -1027,10 +2203,11 @@ class BribeYourselfFitCloud {
    * Force immediate sync
    */
   async forceSync() {
-    // Reset sync flag first to prevent stuck states
-    this.cloudConfig.syncInProgress = false;
+    console.log('Force sync starting...');
+    console.log('Connection status:', this.cloudConfig.isConnected);
 
     if (!this.cloudConfig.isConnected) {
+      console.log('Not connected, testing connection first...');
       const connected = await this.testCloudConnection();
       if (!connected) {
         this.showError('Cannot sync - connection to cloud storage failed');
@@ -1038,9 +2215,12 @@ class BribeYourselfFitCloud {
       }
     }
 
+    console.log('Attempting to save to cloud...');
     const success = await this.saveToCloud();
     if (success) {
       this.showSuccess('✅ Force sync completed successfully');
+      // Update settings display after successful sync
+      this.updateSettingsDisplay();
     } else {
       this.showError('❌ Force sync failed');
     }
@@ -1055,7 +2235,7 @@ class BribeYourselfFitCloud {
 
     if (!status) {
       // Determine status automatically
-      if (!this.cloudConfig.apiKey) {
+      if (!this.cloudConfig.token || !this.cloudConfig.baseId) {
         status = 'offline';
         message = 'Not Configured';
       } else if (!this.cloudConfig.isConnected) {
@@ -1129,46 +2309,70 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Update pending sync count with visual indicator
+   * Update pending sync count with visual indicator (Enhanced to sync header badge)
    */
   updatePendingSyncCount() {
+    const pendingCount = this.syncQueue.filter((item) => !item.synced).length;
+
+    // Update settings page pending count
     const pendingSyncsEl = document.getElementById('pendingSyncs');
     if (pendingSyncsEl) {
-      const pendingCount = this.syncQueue.filter((item) => !item.synced).length;
       pendingSyncsEl.textContent = pendingCount.toString();
 
       // Add visual indicator if there are pending syncs
       if (pendingCount > 0) {
         pendingSyncsEl.style.color = 'var(--accent-warning)';
         pendingSyncsEl.style.fontWeight = 'bold';
+        pendingSyncsEl.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+        pendingSyncsEl.style.padding = '2px 6px';
+        pendingSyncsEl.style.borderRadius = '4px';
       } else {
-        pendingSyncsEl.style.color = 'var(--text-secondary)';
-        pendingSyncsEl.style.fontWeight = 'normal';
+        pendingSyncsEl.style.color = 'var(--accent-success)';
+        pendingSyncsEl.style.fontWeight = 'bold';
+        pendingSyncsEl.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+        pendingSyncsEl.style.padding = '2px 6px';
+        pendingSyncsEl.style.borderRadius = '4px';
       }
     }
 
-    // Update sync status to show pending items
-    if (
-      this.syncQueue.filter((item) => !item.synced).length > 0 &&
-      this.cloudConfig.isConnected
-    ) {
-      this.updateSyncStatus(
-        'warning',
-        `${
-          this.syncQueue.filter((item) => !item.synced).length
-        } pending sync(s)`
-      );
+    // Update header badge to match
+    const headerBadge = document.querySelector('.sync-status');
+    if (headerBadge && pendingCount === 0) {
+      // If no pending syncs, ensure header shows synced status
+      this.updateSyncStatus('synced', 'Synced');
     }
+
+    console.log(`📊 Pending sync count updated: ${pendingCount}`);
   }
 
   /**
    * Set up all event listeners for the application
    */
   setupEventListeners() {
+    console.log('Setting up event listeners...');
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.attachEventListeners();
+      });
+    } else {
+      // DOM already loaded, attach immediately
+      this.attachEventListeners();
+    }
+  }
+
+  /**
+   * Attach all event listeners to DOM elements
+   */
+  attachEventListeners() {
+    console.log('Attaching event listeners to DOM elements...');
+
     // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
       themeToggle.addEventListener('click', this.toggleTheme.bind(this));
+      console.log('✅ Theme toggle listener attached');
     }
 
     // Cloud setup form
@@ -1180,13 +2384,15 @@ class BribeYourselfFitCloud {
           'click',
           this.handleTestConnection.bind(this)
         );
+        console.log('✅ Test connection listener attached');
       }
 
       const toggleApiKeyBtn = document.getElementById('toggleApiKey');
       if (toggleApiKeyBtn) {
         toggleApiKeyBtn.addEventListener('click', () =>
-          this.togglePasswordVisibility('jsonbinApiKey')
+          this.togglePasswordVisibility('airtableToken')
         );
+        console.log('✅ Toggle API key listener attached');
       }
     }
 
@@ -1194,12 +2400,23 @@ class BribeYourselfFitCloud {
     const setupForm = document.getElementById('setupForm');
     if (setupForm) {
       setupForm.addEventListener('submit', this.handleSetup.bind(this));
+      console.log('✅ Setup form listener attached');
     }
 
-    // Daily log form
+    // Daily log form - CRITICAL FIX
     const dailyLogForm = document.getElementById('dailyLogForm');
     if (dailyLogForm) {
-      dailyLogForm.addEventListener('submit', this.handleDailyLog.bind(this));
+      // Remove any existing listeners first
+      dailyLogForm.replaceWith(dailyLogForm.cloneNode(true));
+      // Re-get the element and attach listener
+      const newDailyLogForm = document.getElementById('dailyLogForm');
+      newDailyLogForm.addEventListener(
+        'submit',
+        this.handleDailyLog.bind(this)
+      );
+      console.log('✅ Daily log form listener attached');
+    } else {
+      console.warn('❌ Daily log form not found');
     }
 
     // Wellness checkboxes
@@ -1207,6 +2424,9 @@ class BribeYourselfFitCloud {
     wellnessCheckboxes.forEach((checkbox) => {
       checkbox.addEventListener('change', this.updateWellnessScore.bind(this));
     });
+    console.log(
+      `✅ ${wellnessCheckboxes.length} wellness checkbox listeners attached`
+    );
 
     // Exercise type checkboxes
     const exerciseCheckboxes = document.querySelectorAll('.exercise-checkbox');
@@ -1216,6 +2436,9 @@ class BribeYourselfFitCloud {
         this.updateExerciseSelection.bind(this)
       );
     });
+    console.log(
+      `✅ ${exerciseCheckboxes.length} exercise checkbox listeners attached`
+    );
 
     // Tab navigation
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1224,6 +2447,7 @@ class BribeYourselfFitCloud {
         this.switchTab(e.target.dataset.tab);
       });
     });
+    console.log(`✅ ${tabBtns.length} tab button listeners attached`);
 
     // Chart period controls
     const chartBtns = document.querySelectorAll('.chart-btn');
@@ -1232,11 +2456,13 @@ class BribeYourselfFitCloud {
         this.setChartPeriod(parseInt(e.target.dataset.period) || 'all');
       });
     });
+    console.log(`✅ ${chartBtns.length} chart button listeners attached`);
 
     // Reward form
     const rewardForm = document.getElementById('rewardForm');
     if (rewardForm) {
       rewardForm.addEventListener('submit', this.handleCustomReward.bind(this));
+      console.log('✅ Reward form listener attached');
     }
 
     // Reward type selector
@@ -1246,18 +2472,251 @@ class BribeYourselfFitCloud {
         'change',
         this.updateRewardCriteria.bind(this)
       );
+      console.log('✅ Reward type selector listener attached');
     }
 
     // Calendar navigation
     const prevMonth = document.getElementById('prevMonth');
     const nextMonth = document.getElementById('nextMonth');
-    if (prevMonth)
+    if (prevMonth) {
       prevMonth.addEventListener('click', () => this.navigateCalendar(-1));
-    if (nextMonth)
+      console.log('✅ Previous month listener attached');
+    }
+    if (nextMonth) {
       nextMonth.addEventListener('click', () => this.navigateCalendar(1));
+      console.log('✅ Next month listener attached');
+    }
 
     // Settings event listeners
     this.setupSettingsEventListeners();
+
+    console.log('🎉 All event listeners attached successfully');
+  }
+
+  /**
+   * Setup settings-specific event listeners with proper DOM checking
+   */
+  setupSettingsEventListeners() {
+    console.log('Setting up settings event listeners...');
+
+    // Force sync button - CRITICAL FIX
+    const forceSyncBtn = document.getElementById('forceSyncBtn');
+    if (forceSyncBtn) {
+      // Remove existing listener and add new one
+      forceSyncBtn.replaceWith(forceSyncBtn.cloneNode(true));
+      document.getElementById('forceSyncBtn').addEventListener('click', () => {
+        console.log('Force sync clicked');
+        this.forceSync();
+      });
+      console.log('✅ Force sync button listener attached');
+    }
+
+    // Test connection button in settings - CRITICAL FIX
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    if (testConnectionBtn) {
+      testConnectionBtn.replaceWith(testConnectionBtn.cloneNode(true));
+      document
+        .getElementById('testConnectionBtn')
+        .addEventListener('click', () => {
+          console.log('Test connection clicked from settings');
+          this.handleTestConnection();
+        });
+      console.log('✅ Test connection button listener attached');
+    }
+
+    // Update API key button
+    const updateApiKeyBtn = document.getElementById('updateApiKeyBtn');
+    if (updateApiKeyBtn) {
+      updateApiKeyBtn.addEventListener(
+        'click',
+        this.handleUpdateApiKey.bind(this)
+      );
+      console.log('✅ Update API key button listener attached');
+    }
+
+    // Toggle API key visibility in settings
+    const toggleSettingsApiKey = document.getElementById(
+      'toggleSettingsApiKey'
+    );
+    if (toggleSettingsApiKey) {
+      toggleSettingsApiKey.addEventListener('click', () =>
+        this.togglePasswordVisibility('settingsApiKey')
+      );
+      console.log('✅ Toggle settings API key listener attached');
+    }
+
+    // Auto sync toggle
+    const autoSyncEnabled = document.getElementById('autoSyncEnabled');
+    if (autoSyncEnabled) {
+      autoSyncEnabled.addEventListener('change', (e) => {
+        this.autoSyncEnabled = e.target.checked;
+        localStorage.setItem('byf_auto_sync', this.autoSyncEnabled.toString());
+        if (this.autoSyncEnabled) {
+          this.startAutoSync();
+        } else if (this.autoSyncInterval) {
+          clearInterval(this.autoSyncInterval);
+        }
+      });
+      console.log('✅ Auto sync toggle listener attached');
+    }
+
+    // Sync notifications toggle
+    const syncNotifications = document.getElementById('syncNotifications');
+    if (syncNotifications) {
+      syncNotifications.addEventListener('change', (e) => {
+        this.syncNotifications = e.target.checked;
+        localStorage.setItem(
+          'byf_sync_notifications',
+          this.syncNotifications.toString()
+        );
+      });
+      console.log('✅ Sync notifications toggle listener attached');
+    }
+
+    // Export buttons
+    const exportCloudBtn = document.getElementById('exportCloudDataBtn');
+    if (exportCloudBtn) {
+      exportCloudBtn.addEventListener('click', this.exportCloudData.bind(this));
+      console.log('✅ Export cloud button listener attached');
+    }
+
+    const exportLocalBtn = document.getElementById('exportLocalDataBtn');
+    if (exportLocalBtn) {
+      exportLocalBtn.addEventListener('click', this.exportLocalData.bind(this));
+      console.log('✅ Export local button listener attached');
+    }
+
+    // Reset buttons
+    const resetLocalBtn = document.getElementById('resetLocalDataBtn');
+    if (resetLocalBtn) {
+      resetLocalBtn.addEventListener('click', this.resetLocalData.bind(this));
+    }
+
+    const resetCloudBtn = document.getElementById('resetCloudDataBtn');
+    if (resetCloudBtn) {
+      resetCloudBtn.addEventListener('click', this.resetCloudData.bind(this));
+    }
+
+    const resetAllBtn = document.getElementById('resetAllDataBtn');
+    if (resetAllBtn) {
+      resetAllBtn.addEventListener('click', this.resetAllData.bind(this));
+    }
+
+    // View stats button
+    const viewStatsBtn = document.getElementById('viewStatsBtn');
+    if (viewStatsBtn) {
+      viewStatsBtn.addEventListener('click', this.viewAppStats.bind(this));
+    }
+
+    // Theme preference radio buttons
+    const themeRadios = document.querySelectorAll(
+      'input[name="themePreference"]'
+    );
+    themeRadios.forEach((radio) => {
+      radio.addEventListener(
+        'change',
+        this.handleThemePreferenceChange.bind(this)
+      );
+    });
+    console.log(`✅ ${themeRadios.length} theme radio listeners attached`);
+
+    // Unit and format selectors
+    const weightUnit = document.getElementById('weightUnit');
+    const dateFormat = document.getElementById('dateFormat');
+    const weekStart = document.getElementById('weekStart');
+
+    if (weightUnit) {
+      weightUnit.addEventListener(
+        'change',
+        this.handleSettingChange.bind(this)
+      );
+    }
+    if (dateFormat) {
+      dateFormat.addEventListener(
+        'change',
+        this.handleSettingChange.bind(this)
+      );
+    }
+    if (weekStart) {
+      weekStart.addEventListener('change', this.handleSettingChange.bind(this));
+    }
+
+    // Goal update buttons
+    const updateGoalsBtn = document.getElementById('updateGoalsBtn');
+    const updateWeightGoalsBtn = document.getElementById(
+      'updateWeightGoalsBtn'
+    );
+
+    if (updateGoalsBtn) {
+      updateGoalsBtn.addEventListener(
+        'click',
+        this.handleUpdateDailyGoals.bind(this)
+      );
+    }
+    if (updateWeightGoalsBtn) {
+      updateWeightGoalsBtn.addEventListener(
+        'click',
+        this.handleUpdateWeightGoals.bind(this)
+      );
+    }
+
+    // Goal threshold checkboxes
+    const allowPartialSteps = document.getElementById('allowPartialSteps');
+    const allowPartialExercise = document.getElementById(
+      'allowPartialExercise'
+    );
+    const strictWellness = document.getElementById('strictWellness');
+
+    if (allowPartialSteps) {
+      allowPartialSteps.addEventListener(
+        'change',
+        this.handleSettingChange.bind(this)
+      );
+    }
+    if (allowPartialExercise) {
+      allowPartialExercise.addEventListener(
+        'change',
+        this.handleSettingChange.bind(this)
+      );
+    }
+    if (strictWellness) {
+      strictWellness.addEventListener(
+        'change',
+        this.handleSettingChange.bind(this)
+      );
+    }
+
+    // Enhanced reset buttons
+    const resetStreaksBtn = document.getElementById('resetStreaksBtn');
+    const clearTodayBtn = document.getElementById('clearTodayBtn');
+    const resetProfileBtn = document.getElementById('resetProfileBtn');
+    const resetLogsBtn = document.getElementById('resetLogsBtn');
+
+    if (resetStreaksBtn) {
+      resetStreaksBtn.addEventListener('click', this.resetStreaks.bind(this));
+    }
+    if (clearTodayBtn) {
+      clearTodayBtn.addEventListener('click', this.clearTodaysLog.bind(this));
+    }
+    if (resetProfileBtn) {
+      resetProfileBtn.addEventListener('click', this.resetProfile.bind(this));
+    }
+    if (resetLogsBtn) {
+      resetLogsBtn.addEventListener('click', this.resetLogs.bind(this));
+    }
+
+    // Import file handler
+    const importFile = document.getElementById('importFile');
+    if (importFile) {
+      importFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.importData(file);
+        }
+      });
+    }
+
+    console.log('✅ Settings event listeners setup complete');
   }
 
   /**
@@ -1467,70 +2926,41 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Validate API key format before testing connection
-   */
-  validateApiKeyFormat(apiKey) {
-    if (!apiKey || apiKey.trim().length === 0) {
-      return { valid: false, message: 'API key cannot be empty' };
-    }
-
-    const trimmedKey = apiKey.trim();
-
-    // JSONBin.io API keys typically start with $2a$ or $2b$ (bcrypt format)
-    if (!trimmedKey.startsWith('$2a$') && !trimmedKey.startsWith('$2b$')) {
-      return {
-        valid: false,
-        message:
-          'API key format appears incorrect. JSONBin.io keys typically start with $2a$ or $2b$',
-      };
-    }
-
-    if (trimmedKey.length < 50) {
-      return {
-        valid: false,
-        message:
-          'API key appears too short. Please verify you copied the complete key.',
-      };
-    }
-
-    // Check for common copy-paste errors
-    if (
-      trimmedKey.includes(' ') ||
-      trimmedKey.includes('\n') ||
-      trimmedKey.includes('\t')
-    ) {
-      return {
-        valid: false,
-        message:
-          'API key contains invalid characters. Please ensure you copied it correctly.',
-      };
-    }
-
-    return { valid: true, message: 'API key format looks correct' };
-  }
-
-  /**
-   * Enhanced test connection with better validation
+   * Enhanced test connection with better validation for Airtable
    */
   async handleTestConnection() {
-    const apiKeyInput = document.getElementById('jsonbinApiKey');
-    const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+    const tokenInput = document.getElementById('airtableToken');
+    const baseIdInput = document.getElementById('airtableBaseId');
+    const token = tokenInput ? tokenInput.value.trim() : '';
+    const baseId = baseIdInput ? baseIdInput.value.trim() : '';
 
-    // Validate API key format first
-    const validation = this.validateApiKeyFormat(apiKey);
-    if (!validation.valid) {
-      this.updateConnectionStatus('error', validation.message);
+    // Validate token format first
+    const tokenValidation = this.validateApiKeyFormat(token);
+    if (!tokenValidation.valid) {
+      this.updateConnectionStatus('error', tokenValidation.message);
+      return;
+    }
+
+    // Validate base ID format
+    const baseIdValidation = this.validateBaseIdFormat(baseId);
+    if (!baseIdValidation.valid) {
+      this.updateConnectionStatus('error', baseIdValidation.message);
       return;
     }
 
     // Show validation success message briefly
-    this.updateConnectionStatus('testing', validation.message);
+    this.updateConnectionStatus(
+      'testing',
+      'Credentials look good, testing connection...'
+    );
 
     // Wait a moment then proceed with connection test
     setTimeout(async () => {
-      // Temporarily set API key for testing
-      const originalApiKey = this.cloudConfig.apiKey;
-      this.cloudConfig.apiKey = apiKey;
+      // Temporarily set credentials for testing
+      const originalToken = this.cloudConfig.token;
+      const originalBaseId = this.cloudConfig.baseId;
+      this.cloudConfig.token = token;
+      this.cloudConfig.baseId = baseId;
 
       const success = await this.testCloudConnection();
 
@@ -1548,8 +2978,9 @@ class BribeYourselfFitCloud {
           profileSection.scrollIntoView({ behavior: 'smooth' });
         }
       } else {
-        // Restore original API key if test failed
-        this.cloudConfig.apiKey = originalApiKey;
+        // Restore original credentials if test failed
+        this.cloudConfig.token = originalToken;
+        this.cloudConfig.baseId = originalBaseId;
       }
     }, 1000);
   }
@@ -1577,9 +3008,9 @@ class BribeYourselfFitCloud {
   async handleSetup(e) {
     e.preventDefault();
 
-    // Ensure API key is set
-    if (!this.cloudConfig.apiKey) {
-      this.showError('Please test your API key connection first');
+    // Ensure Airtable credentials are set
+    if (!this.cloudConfig.token || !this.cloudConfig.baseId) {
+      this.showError('Please test your Airtable connection first');
       return;
     }
 
@@ -1767,122 +3198,6 @@ class BribeYourselfFitCloud {
     }
 
     this.loadSettingsFromStorage();
-  }
-
-  /**
-   * Load settings from storage (new function)
-   */
-  loadSettingsFromStorage() {
-    try {
-      // Load settings from localStorage
-      const savedSettings = localStorage.getItem('byf_settings');
-      if (savedSettings) {
-        this.settings = {
-          ...this.getDefaultSettings(),
-          ...JSON.parse(savedSettings),
-        };
-      } else {
-        this.settings = this.getDefaultSettings();
-      }
-
-      // Apply theme preference
-      if (this.settings.themePreference === 'system') {
-        this.setupSystemThemeListener();
-      } else {
-        document.documentElement.setAttribute(
-          'data-theme',
-          this.settings.themePreference
-        );
-        localStorage.setItem('byf_theme', this.settings.themePreference);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      this.settings = this.getDefaultSettings();
-    }
-  }
-
-  /**
-   * Update all weight displays when unit changes
-   */
-  updateWeightDisplays() {
-    const weightUnit = this.settings?.weightUnit || 'lbs';
-    console.log(`🔄 Updating weight displays to ${weightUnit}`);
-
-    if (!this.currentUser) {
-      console.log('❌ No current user data available');
-      return;
-    }
-
-    // Update quick stats in sidebar
-    const currentWeightEl = document.getElementById('currentWeightDisplay');
-    const goalWeightEl = document.getElementById('goalWeightDisplay');
-    const weightToGoEl = document.getElementById('weightToGoDisplay');
-
-    if (currentWeightEl) {
-      const currentWeight =
-        weightUnit === 'kg'
-          ? (this.currentUser.currentWeight * 0.453592).toFixed(1)
-          : this.currentUser.currentWeight;
-      currentWeightEl.textContent = `${currentWeight} ${weightUnit}`;
-    }
-
-    if (goalWeightEl) {
-      const goalWeight =
-        weightUnit === 'kg'
-          ? (this.currentUser.goalWeight * 0.453592).toFixed(1)
-          : this.currentUser.goalWeight;
-      goalWeightEl.textContent = `${goalWeight} ${weightUnit}`;
-    }
-
-    if (weightToGoEl) {
-      const currentWeight =
-        weightUnit === 'kg'
-          ? this.currentUser.currentWeight * 0.453592
-          : this.currentUser.currentWeight;
-      const goalWeight =
-        weightUnit === 'kg'
-          ? this.currentUser.goalWeight * 0.453592
-          : this.currentUser.goalWeight;
-      const weightToGo = Math.abs(currentWeight - goalWeight);
-      weightToGoEl.textContent = `${weightToGo.toFixed(1)} ${weightUnit}`;
-    }
-
-    // Update form labels
-    const weightLabels = document.querySelectorAll(
-      'label[for*="Weight"], label[for*="weight"]'
-    );
-
-    weightLabels.forEach((label) => {
-      const originalText = label.textContent;
-      // Remove any existing unit indicators and add the current one
-      let newText = originalText.replace(/\s*\([^)]*\)[^)]*$/g, '');
-      newText = newText.replace(/\s*-\s*(lbs|kg)\s*$/g, '');
-      newText = `${newText} (${weightUnit})`;
-
-      if (originalText !== newText) {
-        label.textContent = newText;
-      }
-    });
-  }
-
-  /**
-   * Setup system theme preference listener (new function)
-   */
-  setupSystemThemeListener() {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleThemeChange = (e) => {
-      if (this.settings.themePreference === 'system') {
-        const theme = e.matches ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('byf_theme', theme);
-        this.updateThemeToggle(theme);
-      }
-    };
-
-    mediaQuery.addListener(handleThemeChange);
-    // Set initial theme
-    handleThemeChange(mediaQuery);
   }
 
   /**
@@ -2230,7 +3545,7 @@ class BribeYourselfFitCloud {
     );
 
     const stats = {
-      version: 'Cloud v1.0.0',
+      version: 'Airtable v1.1.0',
       cloudConnected: this.cloudConfig.isConnected,
       lastCloudSync: this.cloudConfig.lastSync,
       profileCreated: this.currentUser?.setupDate,
@@ -2299,23 +3614,36 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Handle general setting changes (enhanced for cloud)
+   * Handle general setting changes (enhanced for cloud with UI updates)
    */
   handleSettingChange(e) {
     const setting = e.target.id;
     const value =
       e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
+    console.log(`🔧 Setting changed: ${setting} = ${value}`);
+
     this.settings = this.settings || {};
     this.settings[setting] = value;
     this.saveSettings();
 
-    // Apply certain settings immediately
+    // Apply certain settings immediately with UI updates
     if (setting === 'weekStart') {
       // Re-render calendar if it's currently visible
       if (this.currentTab === 'charts') {
         this.renderStreakCalendar();
       }
+    } else if (setting === 'weightUnit') {
+      console.log(`🔄 Weight unit changed to: ${value}`);
+      // Update all weight displays immediately
+      this.updateWeightDisplays();
+      // Also update the settings display to convert the input values
+      setTimeout(() => {
+        this.updateSettingsDisplay();
+      }, 100);
+    } else if (setting === 'dateFormat') {
+      // Update date displays if needed
+      this.updateCurrentDate();
     }
 
     // Sync settings to cloud
@@ -2529,12 +3857,67 @@ class BribeYourselfFitCloud {
    * Load settings tab content (enhanced for cloud)
    */
   loadSettingsTab() {
+    console.log('📋 Loading settings tab...');
+
+    // Load settings from storage first
+    this.loadSettingsFromStorage();
+
+    // Update the display after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      console.log('🔄 Delayed settings display update...');
+      this.updateSettingsDisplay();
+    }, 100);
+
+    // Also add immediate update for good measure
     this.updateSettingsDisplay();
-    this.loadSettingsFromStorage(); // Add this new function
+
+    console.log('✅ Settings tab loaded successfully');
   }
 
   /**
-   * Load settings from storage (enhanced function)
+   * Setup event listeners specifically for settings tab elements
+   */
+  setupSettingsTabEventListeners() {
+    // Force sync button
+    const forceSyncBtn = document.getElementById('forceSyncBtn');
+    if (forceSyncBtn) {
+      // Remove existing listener and add new one
+      forceSyncBtn.replaceWith(forceSyncBtn.cloneNode(true));
+      document.getElementById('forceSyncBtn').addEventListener('click', () => {
+        console.log('Force sync clicked from settings');
+        this.forceSync();
+      });
+    }
+
+    // Test connection button in settings
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    if (testConnectionBtn) {
+      // Remove existing listener and add new one
+      testConnectionBtn.replaceWith(testConnectionBtn.cloneNode(true));
+      document
+        .getElementById('testConnectionBtn')
+        .addEventListener('click', () => {
+          console.log('Test connection clicked from settings');
+          this.handleTestConnection();
+        });
+    }
+
+    // Update API key button
+    const updateApiKeyBtn = document.getElementById('updateApiKeyBtn');
+    if (updateApiKeyBtn) {
+      updateApiKeyBtn.replaceWith(updateApiKeyBtn.cloneNode(true));
+      document
+        .getElementById('updateApiKeyBtn')
+        .addEventListener('click', () => {
+          this.handleUpdateApiKey();
+        });
+    }
+
+    console.log('Settings tab event listeners attached');
+  }
+
+  /**
+   * Load settings from storage (new function)
    */
   loadSettingsFromStorage() {
     try {
@@ -2594,14 +3977,38 @@ class BribeYourselfFitCloud {
   }
 
   /**
-   * Update settings display (complete merged version)
+   * Update settings display with enhanced DOM checking
    */
   updateSettingsDisplay() {
     console.log('🔄 Updating settings display...');
-    console.log('Connection status:', this.cloudConfig.isConnected);
+    console.log('Current connection status:', this.cloudConfig.isConnected);
     console.log('Last sync:', this.cloudConfig.lastSync);
 
-    // Update connection info
+    // Wait a moment for DOM to be ready if we're on settings tab
+    if (this.currentTab === 'settings') {
+      // Use setTimeout to ensure DOM elements are rendered
+      setTimeout(() => {
+        this.doSettingsDisplayUpdate();
+      }, 50);
+    } else {
+      this.doSettingsDisplayUpdate();
+    }
+  }
+
+  /**
+   * Actually perform the settings display update
+   */
+  doSettingsDisplayUpdate() {
+    console.log('🎯 Performing settings display update...');
+
+    // Check if we're actually on the settings tab
+    const settingsTab = document.getElementById('settingsTab');
+    if (!settingsTab || settingsTab.classList.contains('hidden')) {
+      console.log('⏭️ Not on settings tab, skipping update');
+      return;
+    }
+
+    // Update connection status - CRITICAL FIX
     const connectionStatusEl = document.getElementById(
       'settingsConnectionStatus'
     );
@@ -2616,8 +4023,15 @@ class BribeYourselfFitCloud {
       console.log('✅ Connection status updated to:', status);
     } else {
       console.warn('❌ settingsConnectionStatus element not found');
+      // Let's check what settings elements exist
+      console.log('Available settings elements:', {
+        settingsTab: !!document.getElementById('settingsTab'),
+        connectionInfo: !!document.getElementById('connectionInfo'),
+        settingsContainer: !!document.querySelector('.settings-container'),
+      });
     }
 
+    // Update last sync time - CRITICAL FIX
     const lastSyncEl = document.getElementById('lastSyncTime');
     if (lastSyncEl) {
       if (this.cloudConfig.lastSync) {
@@ -2635,20 +4049,52 @@ class BribeYourselfFitCloud {
       console.warn('❌ lastSyncTime element not found');
     }
 
-    // Update API key display with masked value
-    const settingsApiKeyEl = document.getElementById('settingsApiKey');
-    if (settingsApiKeyEl && this.cloudConfig.apiKey) {
-      const maskedKey =
-        this.cloudConfig.apiKey.substring(0, 8) + '••••••••••••';
-      settingsApiKeyEl.placeholder = maskedKey;
+    // Update pending syncs count with visual feedback
+    const pendingSyncsEl = document.getElementById('pendingSyncs');
+    if (pendingSyncsEl) {
+      const pendingCount = this.syncQueue
+        ? this.syncQueue.filter((item) => !item.synced).length
+        : 0;
+      pendingSyncsEl.textContent = pendingCount.toString();
+      console.log('✅ Pending syncs updated to:', pendingCount);
+
+      // Style based on pending count with more visible changes
+      if (pendingCount > 0) {
+        pendingSyncsEl.style.color = 'var(--accent-warning)';
+        pendingSyncsEl.style.fontWeight = 'bold';
+        pendingSyncsEl.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+        pendingSyncsEl.style.padding = '2px 6px';
+        pendingSyncsEl.style.borderRadius = '4px';
+      } else {
+        pendingSyncsEl.style.color = 'var(--accent-success)';
+        pendingSyncsEl.style.fontWeight = 'bold';
+        pendingSyncsEl.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+        pendingSyncsEl.style.padding = '2px 6px';
+        pendingSyncsEl.style.borderRadius = '4px';
+      }
+    } else {
+      console.warn('❌ pendingSyncs element not found');
     }
 
-    // Update data stats
+    // Update API key display with masked value
+    const settingsApiKeyEl = document.getElementById('settingsApiKey');
+    if (settingsApiKeyEl && this.cloudConfig.token) {
+      const maskedToken =
+        this.cloudConfig.token.substring(0, 8) + '••••••••••••';
+      settingsApiKeyEl.placeholder = maskedToken;
+      console.log('✅ API key display updated');
+    }
+
+    // Update data statistics with better formatting
     const totalEntriesEl = document.getElementById('totalDataEntries');
     if (totalEntriesEl) {
-      totalEntriesEl.textContent = Object.keys(
-        this.dailyLogs
-      ).length.toString();
+      const totalEntries = this.dailyLogs
+        ? Object.keys(this.dailyLogs).length
+        : 0;
+      totalEntriesEl.textContent = totalEntries.toString();
+      totalEntriesEl.style.fontWeight = 'bold';
+      totalEntriesEl.style.color = 'var(--accent-primary)';
+      console.log('✅ Total entries updated to:', totalEntries);
     }
 
     const storageUsedEl = document.getElementById('storageUsed');
@@ -2660,46 +4106,79 @@ class BribeYourselfFitCloud {
         customRewards: this.customRewards,
         achievements: this.achievements,
       }).length;
-      storageUsedEl.textContent = `~${Math.round(dataSize / 1024)} KB`;
+      const sizeInKB = Math.round(dataSize / 1024);
+      storageUsedEl.textContent = `~${sizeInKB} KB`;
+      storageUsedEl.style.fontWeight = 'bold';
+      storageUsedEl.style.color = 'var(--accent-primary)';
+      console.log('✅ Storage used updated to:', `~${sizeInKB} KB`);
     }
 
-    // Update preferences
+    // Update user preferences checkboxes
     const autoSyncCheckbox = document.getElementById('autoSyncEnabled');
     if (autoSyncCheckbox) {
       autoSyncCheckbox.checked = this.autoSyncEnabled;
+      console.log('✅ Auto sync checkbox updated to:', this.autoSyncEnabled);
     }
 
     const syncNotificationsCheckbox =
       document.getElementById('syncNotifications');
     if (syncNotificationsCheckbox) {
       syncNotificationsCheckbox.checked = this.syncNotifications;
+      console.log(
+        '✅ Sync notifications checkbox updated to:',
+        this.syncNotifications
+      );
     }
 
     // Update theme preference radio buttons
-    const themePreference = this.settings?.themePreference || 'system';
-    const themeRadio = document.querySelector(
-      `input[value="${themePreference}"]`
-    );
-    if (themeRadio) {
-      themeRadio.checked = true;
+    if (this.settings) {
+      const themePreference = this.settings.themePreference || 'system';
+      const themeRadio = document.querySelector(
+        `input[value="${themePreference}"]`
+      );
+      if (themeRadio) {
+        themeRadio.checked = true;
+        console.log('✅ Theme preference updated to:', themePreference);
+      }
+
+      // Update unit and format selectors
+      const weightUnit = document.getElementById('weightUnit');
+      const dateFormat = document.getElementById('dateFormat');
+      const weekStart = document.getElementById('weekStart');
+
+      if (weightUnit && this.settings.weightUnit) {
+        weightUnit.value = this.settings.weightUnit;
+        console.log('✅ Weight unit updated to:', this.settings.weightUnit);
+      }
+      if (dateFormat && this.settings.dateFormat) {
+        dateFormat.value = this.settings.dateFormat;
+        console.log('✅ Date format updated to:', this.settings.dateFormat);
+      }
+      if (weekStart && this.settings.weekStart) {
+        weekStart.value = this.settings.weekStart;
+        console.log('✅ Week start updated to:', this.settings.weekStart);
+      }
+
+      // Update goal threshold checkboxes
+      const allowPartialSteps = document.getElementById('allowPartialSteps');
+      const allowPartialExercise = document.getElementById(
+        'allowPartialExercise'
+      );
+      const strictWellness = document.getElementById('strictWellness');
+
+      if (allowPartialSteps) {
+        allowPartialSteps.checked = this.settings.allowPartialSteps || false;
+      }
+      if (allowPartialExercise) {
+        allowPartialExercise.checked =
+          this.settings.allowPartialExercise || false;
+      }
+      if (strictWellness) {
+        strictWellness.checked = this.settings.strictWellness || false;
+      }
     }
 
-    // Update unit and format selectors
-    const weightUnit = document.getElementById('weightUnit');
-    const dateFormat = document.getElementById('dateFormat');
-    const weekStart = document.getElementById('weekStart');
-
-    if (weightUnit && this.settings?.weightUnit) {
-      weightUnit.value = this.settings.weightUnit;
-    }
-    if (dateFormat && this.settings?.dateFormat) {
-      dateFormat.value = this.settings.dateFormat;
-    }
-    if (weekStart && this.settings?.weekStart) {
-      weekStart.value = this.settings.weekStart;
-    }
-
-    // Update daily goals inputs with weight conversion
+    // Update daily goals inputs
     if (this.currentUser) {
       const settingsSteps = document.getElementById('settingsSteps');
       const settingsExercise = document.getElementById('settingsExercise');
@@ -2724,51 +4203,14 @@ class BribeYourselfFitCloud {
         settingsWater.value = this.currentUser.dailyWater;
         console.log('✅ Water goal updated to:', this.currentUser.dailyWater);
       }
-
-      // Handle weight conversion for settings inputs
-      const weightUnit = this.settings?.weightUnit || 'lbs';
       if (settingsStartingWeight) {
-        const displayStartingWeight =
-          weightUnit === 'kg'
-            ? (this.currentUser.startingWeight * 0.453592).toFixed(1)
-            : this.currentUser.startingWeight;
-        settingsStartingWeight.value = displayStartingWeight;
-        console.log(
-          '✅ Settings starting weight updated to:',
-          displayStartingWeight,
-          weightUnit
-        );
+        settingsStartingWeight.value = this.currentUser.startingWeight;
       }
       if (settingsGoalWeight) {
-        const displayGoalWeight =
-          weightUnit === 'kg'
-            ? (this.currentUser.goalWeight * 0.453592).toFixed(1)
-            : this.currentUser.goalWeight;
-        settingsGoalWeight.value = displayGoalWeight;
-        console.log(
-          '✅ Settings goal weight updated to:',
-          displayGoalWeight,
-          weightUnit
-        );
+        settingsGoalWeight.value = this.currentUser.goalWeight;
       }
     }
 
-    // Update goal threshold checkboxes
-    const allowPartialSteps = document.getElementById('allowPartialSteps');
-    const allowPartialExercise = document.getElementById(
-      'allowPartialExercise'
-    );
-    const strictWellness = document.getElementById('strictWellness');
-
-    if (allowPartialSteps)
-      allowPartialSteps.checked = this.settings?.allowPartialSteps || false;
-    if (allowPartialExercise)
-      allowPartialExercise.checked =
-        this.settings?.allowPartialExercise || false;
-    if (strictWellness)
-      strictWellness.checked = this.settings?.strictWellness || false;
-
-    this.updatePendingSyncCount();
     console.log('🎉 Settings display update complete');
   }
 
@@ -2867,6 +4309,15 @@ class BribeYourselfFitCloud {
 
     const minWeight = Math.min(...weights, goalWeightForChart) - 5;
     const maxWeight = Math.max(...weights, startingWeightForChart) + 5;
+
+    console.log(
+      `📊 Chart scale: ${minWeight.toFixed(1)} - ${maxWeight.toFixed(
+        1
+      )} ${weightUnit}`
+    );
+    console.log(
+      `📊 Goal weight for chart: ${goalWeightForChart.toFixed(1)} ${weightUnit}`
+    );
 
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
@@ -3410,13 +4861,17 @@ class BribeYourselfFitCloud {
         description: 'Complete 100 consecutive days of goals',
       },
 
-      // Weight loss milestones
+      // Weight loss milestones (including custom rewards)
       ...this.generateWeightMilestones(),
     ];
+
+    console.log(
+      `🏆 Initialized ${this.defaultMilestones.length} total milestones`
+    );
   }
 
   /**
-   * Generate weight loss milestones based on user's goals (with custom rewards integration - no duplicates)
+   * Generate weight loss milestones based on user's goals
    */
   generateWeightMilestones() {
     if (!this.currentUser) return [];
@@ -3535,6 +4990,9 @@ class BribeYourselfFitCloud {
     });
   }
 
+  /**
+   * Create milestone element
+   */
   createMilestoneElement(milestone) {
     const el = document.createElement('div');
     el.className = 'milestone-item';
@@ -3575,25 +5033,25 @@ class BribeYourselfFitCloud {
     }
 
     el.innerHTML = `
-    <div class="milestone-header">
-      <div class="milestone-title">${milestone.title}</div>
-      <div class="milestone-status ${statusClass}">${statusText}</div>
-    </div>
-    <div class="milestone-description">${milestone.description}</div>
-    <div class="milestone-reward">
-      <div class="reward-text ${isEditable ? 'editable' : ''}" 
-            data-milestone-type="${milestone.type}" 
-            data-milestone-value="${milestone.value}"
-            ${
-              isEditable ? `onclick="app.editMilestoneReward(this)"` : ''
-            }>${rewardText}</div>
+      <div class="milestone-header">
+        <div class="milestone-title">${milestone.title}</div>
+        <div class="milestone-status ${statusClass}">${statusText}</div>
+      </div>
+      <div class="milestone-description">${milestone.description}</div>
+      <div class="milestone-reward">
+        <div class="reward-text ${isEditable ? 'editable' : ''}" 
+      data-milestone-type="${milestone.type}" 
+      data-milestone-value="${milestone.value}"
       ${
-        isAchieved && !isClaimed
-          ? `<button class="claim-btn" onclick="app.claimMilestone('${milestone.type}', ${milestone.value})">Claim Reward</button>`
-          : ''
-      }
-    </div>
-  `;
+        isEditable ? `onclick="app.editMilestoneReward(this)"` : ''
+      }>${rewardText}</div>
+        ${
+          isAchieved && !isClaimed
+            ? `<button class="claim-btn" onclick="app.claimMilestone('${milestone.type}', ${milestone.value})">Claim Reward</button>`
+            : ''
+        }
+      </div>
+    `;
 
     return el;
   }
@@ -3604,6 +5062,8 @@ class BribeYourselfFitCloud {
   editMilestoneReward(element) {
     const milestoneType = element.dataset.milestoneType;
     const milestoneValue = parseInt(element.dataset.milestoneValue);
+
+    console.log(`🎯 Editing milestone: ${milestoneType} ${milestoneValue}`);
 
     // Check if this milestone already has a custom reward
     const existingReward = this.customRewards.find(
@@ -3621,12 +5081,13 @@ class BribeYourselfFitCloud {
     }
 
     // Prompt for custom reward
+    const milestoneDescription =
+      milestoneType === 'weight'
+        ? `${milestoneValue} lbs lost`
+        : `${milestoneValue} day streak`;
+
     const rewardDescription = prompt(
-      `Set your custom reward for this milestone:\n\n${
-        milestoneType === 'weight'
-          ? milestoneValue + ' lbs lost'
-          : milestoneValue + ' day streak'
-      }`,
+      `Set your custom reward for this milestone:\n\n${milestoneDescription}`,
       'Enter your reward (e.g., "Spa day", "New workout clothes", "Cheat meal")'
     );
 
@@ -3636,7 +5097,7 @@ class BribeYourselfFitCloud {
       rewardDescription ===
         'Enter your reward (e.g., "Spa day", "New workout clothes", "Cheat meal")'
     ) {
-      return; // User cancelled or entered placeholder text
+      return;
     }
 
     // Create custom reward
@@ -3646,29 +5107,30 @@ class BribeYourselfFitCloud {
       createdDate: new Date().toISOString(),
     };
 
-    // Add type-specific criteria
     if (milestoneType === 'weight') {
       customReward.weightLoss = milestoneValue;
     } else if (milestoneType === 'streak') {
       customReward.streakDays = milestoneValue;
     }
 
-    // Add to custom rewards
     this.customRewards.push(customReward);
     this.saveLocalData();
 
-    // Add to sync queue and sync to cloud
+    // Add to sync queue and sync to Airtable
     this.addToSyncQueue('customReward', customReward);
     if (this.autoSyncEnabled && this.cloudConfig.isConnected) {
       this.saveToCloud();
     }
 
-    // Regenerate milestones to include the new custom reward
+    // Refresh displays
     this.initializeDefaultMilestones();
     this.renderDefaultMilestones();
-    this.renderCustomRewards(); // Update the custom rewards list too
+    this.renderCustomRewards();
 
     this.showSuccess(`Custom reward added: "${rewardDescription}"`);
+    console.log(
+      `✅ Custom reward created for ${milestoneType} ${milestoneValue}`
+    );
   }
 
   /**
@@ -3680,13 +5142,6 @@ class BribeYourselfFitCloud {
     } else if (milestone.type === 'weight') {
       const weightLost =
         this.currentUser.startingWeight - this.currentUser.currentWeight;
-
-      console.log(`🎯 Checking weight milestone: ${milestone.value} lbs`);
-      console.log(`📊 Starting weight: ${this.currentUser.startingWeight}`);
-      console.log(`📊 Current weight: ${this.currentUser.currentWeight}`);
-      console.log(`📊 Weight lost: ${weightLost.toFixed(1)} lbs`);
-      console.log(`✅ Achieved?: ${weightLost >= milestone.value}`);
-
       return weightLost >= milestone.value;
     }
     return false;
@@ -3804,6 +5259,9 @@ class BribeYourselfFitCloud {
     this.updateRewardCriteria();
     this.renderCustomRewards();
     this.renderDefaultMilestones();
+
+    // Refresh milestones to include the new custom reward
+    this.initializeDefaultMilestones();
 
     this.showSuccess('Custom reward added successfully!');
   }

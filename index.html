@@ -14,7 +14,7 @@
       rel="apple-touch-icon"
       href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjMDA3YmZmIiByeD0iMjQiLz4KPHBhdGggZD0iTTk2IDQ4TDEyMCA3MkgxNDRWMTIwSDEyMEwxMDggMTA4TDk2IDEyMEw4NCA1NkwxMzIgNzhMOTYgNDhaIiBmaWxsPSJ3aGl0ZSIvPgo8Y2lyY2xlIGN4PSI5NiIgY3k9IjE0NCIgcj0iMTIiIGZpbGw9IndoaXRlIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxNzQiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJZRjwvdGV4dD4KPC9zdmc+"
     />
-    <title>BribeYourselfFit - Cloud Fitness Tracker</title>
+    <title>BribeYourselfFit - Airtable Fitness Tracker</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#007bff" />
@@ -29,7 +29,7 @@
       <div class="header-content">
         <div class="logo">
           BribeYourselfFit
-          <span class="version-badge">Cloud</span>
+          <span class="version-badge">Airtable</span>
         </div>
         <div class="header-controls">
           <!-- Sync Status Indicator -->
@@ -52,8 +52,10 @@
       <!-- Setup Screen -->
       <div id="setupScreen" class="setup-form">
         <div class="setup-header">
-          <h1 class="setup-title">Welcome to BribeYourselfFit Cloud!</h1>
-          <p class="setup-subtitle">Set up your cloud-synced fitness goals</p>
+          <h1 class="setup-title">Welcome to BribeYourselfFit Airtable!</h1>
+          <p class="setup-subtitle">
+            Set up your Airtable-powered fitness goals
+          </p>
         </div>
 
         <div class="card">
@@ -61,50 +63,65 @@
             <h2 class="card-title">Cloud Storage Setup</h2>
           </div>
 
-          <!-- JSONBin.io API Configuration -->
+          <!-- Airtable API Configuration -->
           <div class="cloud-config-section">
             <div class="info-box">
               <h3>📱 Your Data, Your Control</h3>
               <p>
                 This version stores your data securely in the cloud using
-                JSONBin.io, allowing you to access your fitness data from any
-                device while keeping it private and under your control.
+                Airtable, allowing you to access your fitness data from any
+                device with the power of a structured database.
               </p>
 
               <div class="setup-steps">
-                <h4>Quick Setup (2 minutes):</h4>
+                <h4>Quick Setup (3 minutes):</h4>
                 <ol>
                   <li>
-                    Visit
-                    <a href="https://jsonbin.io" target="_blank" rel="noopener"
-                      >jsonbin.io</a
+                    Copy our
+                    <a
+                      href="https://github.com/TheBIMsider/BYF/tree/airtable-version"
+                      target="_blank"
+                      rel="noopener"
+                      >Airtable base template</a
                     >
-                    and create a free account
+                    to your account
                   </li>
-                  <li>Go to "API Keys" section in your dashboard</li>
-                  <li>Copy your API key and paste it below</li>
-                  <li>Complete your fitness profile</li>
+                  <li>
+                    Go to
+                    <a
+                      href="https://airtable.com/create/tokens"
+                      target="_blank"
+                      rel="noopener"
+                      >airtable.com/create/tokens</a
+                    >
+                  </li>
+                  <li>
+                    Create a token with read/write permissions for your base
+                  </li>
+                  <li>
+                    Enter your credentials below and complete your profile
+                  </li>
                 </ol>
               </div>
 
               <div class="pricing-note">
-                <strong>Free tier includes:</strong> 10,000 API requests/month
-                (enough for years of daily logging)
+                <strong>Free tier includes:</strong> 1,000 records per base
+                (perfect for personal fitness tracking)
               </div>
             </div>
 
             <form id="cloudSetupForm">
               <div class="form-group">
-                <label for="jsonbinApiKey" class="form-label">
-                  JSONBin.io API Key <span class="required">*</span>
+                <label for="airtableToken" class="form-label">
+                  Airtable Personal Access Token <span class="required">*</span>
                 </label>
                 <div class="input-with-icon">
                   <input
                     type="password"
-                    id="jsonbinApiKey"
-                    name="jsonbinApiKey"
+                    id="airtableToken"
+                    name="airtableToken"
                     class="form-input"
-                    placeholder="$2a$10$..."
+                    placeholder="pat..."
                     required
                   />
                   <button
@@ -116,8 +133,25 @@
                   </button>
                 </div>
                 <small class="form-help">
-                  Your API key is stored locally and used only to sync your
+                  Your token is stored locally and used only to sync your
                   fitness data
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label for="airtableBaseId" class="form-label">
+                  Base ID <span class="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="airtableBaseId"
+                  name="airtableBaseId"
+                  class="form-input"
+                  placeholder="app..."
+                  required
+                />
+                <small class="form-help">
+                  Found in your base URL (starts with "app")
                 </small>
               </div>
 
@@ -790,7 +824,7 @@
               <h3>API Configuration</h3>
               <div class="form-group">
                 <label for="settingsApiKey" class="form-label"
-                  >JSONBin.io API Key</label
+                  >Airtable Personal Access Token</label
                 >
                 <div class="input-with-icon">
                   <input
@@ -1178,7 +1212,7 @@
               </div>
               <div class="info-row">
                 <span class="info-label">Storage:</span>
-                <span class="info-value">JSONBin.io Cloud</span>
+                <span class="info-value">Airtable Cloud</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Data Entries:</span>
@@ -1194,17 +1228,16 @@
               <h3>About This Version</h3>
               <p>
                 This cloud-enabled version of BribeYourselfFit stores your
-                fitness data securely using JSONBin.io, allowing you to access
-                your data from any device while maintaining complete privacy and
-                control.
+                fitness data securely using Airtable, allowing you to access
+                your data from any device with the power of a structured
+                database.
               </p>
-
               <div class="button-group">
                 <button class="btn btn-secondary" id="viewStatsBtn">
                   📈 View App Statistics
                 </button>
                 <a
-                  href="https://github.com/TheBIMsider/BYF/tree/jsonbin-version"
+                  href="https://github.com/TheBIMsider/BYF/tree/airtable-version"
                   target="_blank"
                   class="btn btn-secondary"
                 >

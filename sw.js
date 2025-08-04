@@ -1,5 +1,5 @@
-// BribeYourselfFit JSONBin Service Worker - Basic Caching
-const CACHE_NAME = 'byf-jsonbin-v1.1.0';
+// BribeYourselfFit Airtable Service Worker - Basic Caching
+const CACHE_NAME = 'byf-airtable-v1.1.0';
 const STATIC_ASSETS = [
   './index.html',
   './styles.css',
