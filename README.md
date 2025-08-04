@@ -1,3 +1,14 @@
+# BYFP - Carl's Fitness Shame Repository 🤦‍♂️
+
+⚠️ Personal Data Alert: This is my actual fitness tracking app with real data (or lack of it 😔).
+
+Only The Brave Should Look Here 👉 Carl's Fitness Shame Repository 🤦‍♂️
+My personal version of the public BYF app - trust me nobody wants these fitness stats 🏋️🤔
+
+Public BYF version with instructions and a repo to fork available [HERE](https://github.com/TheBIMsider/BYF)
+
+---
+
 # BribeYourselfFit - JSONBin Cloud Version v1.1
 
 🌐 **Cloud-synced fitness tracking with JSONBin.io storage**
@@ -16,9 +27,6 @@ This cloud version was developed using cutting-edge AI-powered development tools
 This demonstrates how AI tools enable domain experts to build sophisticated cloud-integrated applications with modern web technologies and API patterns.
 
 ---
-## 📱 Screenshot
-
-<img width="1279" height="942" alt="BFY_JSONBin" src="https://github.com/user-attachments/assets/a2a16012-256a-48ed-9eee-950c4f14e4fe" />
 
 ## 🚀 Quick Setup
 
