@@ -64,3 +64,14 @@ The magic happens in the rewards system. Set your own "bribes":
 - **100-day streak**: Weekend vacation
 
 You know what motivates you. The app just helps you stay accountable to your own system.
+
+## 🌟 **Choose Your Backend**
+
+BribeYourselfFit offers multiple storage options to fit your needs:
+
+| Version | Storage | Setup | Best For | Branch | Status |
+|---------|---------|-------|----------|--------|--------|
+| 🏠 **localStorage** | Browser only | None | Simple setup, offline use | `main` | ✅ v1.1 Ready |
+| 🌐 **JSONBin.io** | Cloud API | API key | Cross-device sync, simple cloud | `jsonbin-version` | ✅ v1.1 Ready |
+| 📊 **Airtable** | Structured DB | API setup | Rich data features, sharing | `airtable-version` | ✅ v1.1 Ready |
+| 🔥 **Firebase** | Real-time DB | Project setup | Enterprise scale, real-time sync | `firebase-version` | ✅ v1.1 Ready |
