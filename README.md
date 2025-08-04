@@ -1,11 +1,12 @@
 # BYFP - Carl's Fitness Shame Repository 🤦‍♂️
 
-⚠️ Personal Data Alert: This is my actual fitness tracking app with real data (or lack of it 😔).
+**⚠️ Personal Data Alert: This is my actual fitness tracking app with real data (or lack of it 😔).**
 
-Only The Brave Should Look Here 👉 Carl's Fitness Shame Repository 🤦‍♂️
+### Only The Brave Should Look Here 👉 Carl's Fitness Shame Repository 🤦‍♂️
+
 My personal version of the public BYF app - trust me nobody wants these fitness stats 🏋️🤔
 
-Public BYF JSONBin version with instructions and a repo to fork available [**HERE**](https://github.com/TheBIMsider/BYF/tree/jsonbin-version)
+**Public BYF JSONBin version with instructions and a repo to fork available [**HERE**](https://github.com/TheBIMsider/BYF/tree/jsonbin-version)**
 
 ---
 
