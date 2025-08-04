@@ -14,7 +14,7 @@
       rel="apple-touch-icon"
       href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjMDA3YmZmIiByeD0iMjQiLz4KPHBhdGggZD0iTTk2IDQ4TDEyMCA3MkgxNDRWMTIwSDEyMEwxMDggMTA4TDk2IDEyMEw4NCA1NkwxMzIgNzhMOTYgNDhaIiBmaWxsPSJ3aGl0ZSIvPgo8Y2lyY2xlIGN4PSI5NiIgY3k9IjE0NCIgcj0iMTIiIGZpbGw9IndoaXRlIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxNzQiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJZRjwvdGV4dD4KPC9zdmc+"
     />
-    <title>BribeYourselfFit - Airtable Fitness Tracker</title>
+    <title>BribeYourselfFit - Firebase Personal Fitness Tracker</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#007bff" />
@@ -23,13 +23,14 @@
     <meta name="apple-mobile-web-app-title" content="BribeYourselfFit" />
     <link rel="stylesheet" href="styles.css" />
   </head>
+
   <body>
     <!-- Header -->
     <header class="header">
       <div class="header-content">
         <div class="logo">
           BribeYourselfFit
-          <span class="version-badge">Airtable</span>
+          <span class="version-badge">Firebase</span>
         </div>
         <div class="header-controls">
           <!-- Sync Status Indicator -->
@@ -52,9 +53,9 @@
       <!-- Setup Screen -->
       <div id="setupScreen" class="setup-form">
         <div class="setup-header">
-          <h1 class="setup-title">Welcome to BribeYourselfFit Airtable!</h1>
+          <h1 class="setup-title">Welcome to BribeYourselfFit Firebase!</h1>
           <p class="setup-subtitle">
-            Set up your Airtable-powered fitness goals
+            Set up your Firebase real-time fitness goals
           </p>
         </div>
 
@@ -63,65 +64,55 @@
             <h2 class="card-title">Cloud Storage Setup</h2>
           </div>
 
-          <!-- Airtable API Configuration -->
+          <!-- Firebase API Configuration -->
           <div class="cloud-config-section">
             <div class="info-box">
-              <h3>📱 Your Data, Your Control</h3>
+              <h3>📱 Real-time Fitness Tracking</h3>
               <p>
-                This version stores your data securely in the cloud using
-                Airtable, allowing you to access your fitness data from any
-                device with the power of a structured database.
+                This version stores your data securely in Firebase Realtime
+                Database, providing instant synchronization across all your
+                devices with real-time updates and offline support.
               </p>
 
               <div class="setup-steps">
                 <h4>Quick Setup (3 minutes):</h4>
                 <ol>
                   <li>
-                    Copy our
-                    <a
-                      href="https://github.com/TheBIMsider/BYF/tree/airtable-version"
-                      target="_blank"
-                      rel="noopener"
-                      >Airtable base template</a
-                    >
-                    to your account
-                  </li>
-                  <li>
                     Go to
+
                     <a
-                      href="https://airtable.com/create/tokens"
+                      href="https://console.firebase.google.com/"
                       target="_blank"
                       rel="noopener"
-                      >airtable.com/create/tokens</a
+                      >Firebase Console</a
                     >
+                    and create a new project
                   </li>
-                  <li>
-                    Create a token with read/write permissions for your base
-                  </li>
-                  <li>
-                    Enter your credentials below and complete your profile
-                  </li>
+                  <li>Enable "Realtime Database" in your project</li>
+                  <li>Go to Project Settings → General → Your apps</li>
+                  <li>Copy your Firebase config and enter below</li>
                 </ol>
               </div>
 
               <div class="pricing-note">
-                <strong>Free tier includes:</strong> 1,000 records per base
-                (perfect for personal fitness tracking)
+                <strong>Free Spark plan includes:</strong> 1GB storage,
+                10GB/month transfer (more than enough for personal fitness
+                tracking)
               </div>
             </div>
 
-            <form id="cloudSetupForm">
+            <form id="firebaseSetupForm">
               <div class="form-group">
-                <label for="airtableToken" class="form-label">
-                  Airtable Personal Access Token <span class="required">*</span>
+                <label for="firebaseApiKey" class="form-label">
+                  Firebase API Key <span class="required">*</span>
                 </label>
                 <div class="input-with-icon">
                   <input
                     type="password"
-                    id="airtableToken"
-                    name="airtableToken"
+                    id="firebaseApiKey"
+                    name="firebaseApiKey"
                     class="form-input"
-                    placeholder="pat..."
+                    placeholder="AIza..."
                     required
                   />
                   <button
@@ -133,25 +124,24 @@
                   </button>
                 </div>
                 <small class="form-help">
-                  Your token is stored locally and used only to sync your
-                  fitness data
+                  Found in Firebase Project Settings → General → Web API Key
                 </small>
               </div>
 
               <div class="form-group">
-                <label for="airtableBaseId" class="form-label">
-                  Base ID <span class="required">*</span>
+                <label for="firebaseDatabaseUrl" class="form-label">
+                  Database URL <span class="required">*</span>
                 </label>
                 <input
                   type="text"
-                  id="airtableBaseId"
-                  name="airtableBaseId"
+                  id="firebaseDatabaseUrl"
+                  name="firebaseDatabaseUrl"
                   class="form-input"
-                  placeholder="app..."
+                  placeholder="https://your-project-default-rtdb.firebaseio.com/"
                   required
                 />
                 <small class="form-help">
-                  Found in your base URL (starts with "app")
+                  Found in Realtime Database section of Firebase Console
                 </small>
               </div>
 
@@ -160,159 +150,33 @@
                 class="btn btn-secondary"
                 id="testConnection"
               >
-                🔗 Test Connection
+                🔗 Test Firebase Connection
               </button>
 
               <div id="connectionStatus" class="connection-status hidden"></div>
             </form>
-          </div>
 
-          <!-- User Profile Form -->
-          <div
-            class="profile-section"
-            id="profileSection"
-            style="display: none"
-          >
-            <div class="card-header">
-              <h2 class="card-title">Your Fitness Profile</h2>
-            </div>
-
-            <form id="setupForm">
-              <div class="form-group">
-                <label for="startingWeight" class="form-label"
-                  >Current Weight (lbs)</label
-                >
-                <input
-                  type="number"
-                  id="startingWeight"
-                  name="startingWeight"
-                  class="form-input"
-                  required
-                  min="50"
-                  max="1000"
-                  step="0.1"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="goalWeight" class="form-label"
-                  >Goal Weight (lbs)</label
-                >
-                <input
-                  type="number"
-                  id="goalWeight"
-                  name="goalWeight"
-                  class="form-input"
-                  required
-                  min="50"
-                  max="1000"
-                  step="0.1"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="dailySteps" class="form-label"
-                  >Daily Steps Goal</label
-                >
-                <input
-                  type="number"
-                  id="dailySteps"
-                  name="dailySteps"
-                  class="form-input"
-                  required
-                  min="1000"
-                  max="50000"
-                  value="8000"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="dailyExercise" class="form-label"
-                  >Daily Exercise Minutes Goal</label
-                >
-                <input
-                  type="number"
-                  id="dailyExercise"
-                  name="dailyExercise"
-                  class="form-input"
-                  required
-                  min="5"
-                  max="300"
-                  value="30"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="dailyWater" class="form-label"
-                  >Daily Water Goal (liters)</label
-                >
-                <input
-                  type="number"
-                  id="dailyWater"
-                  name="dailyWater"
-                  class="form-input"
-                  required
-                  min="0.5"
-                  max="10"
-                  step="0.1"
-                  value="2"
-                />
-              </div>
-
-              <button
-                type="submit"
-                class="btn btn-primary"
-                style="width: 100%; margin-top: 1rem"
-              >
-                🚀 Start My Cloud Fitness Journey
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main App Screen -->
-    <div id="appScreen" class="hidden">
-      <!-- Navigation Tabs -->
-      <div class="tab-navigation">
-        <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-        <button class="tab-btn" data-tab="charts">Progress</button>
-        <button class="tab-btn" data-tab="rewards">Rewards</button>
-        <button class="tab-btn" data-tab="settings">Settings</button>
-      </div>
-
-      <!-- Dashboard Tab -->
-      <div id="dashboardTab" class="tab-content active">
-        <div class="main-grid">
-          <!-- Main Content -->
-          <div class="content-main">
-            <!-- Daily Logging -->
-            <div class="card">
+            <!-- User Profile Form -->
+            <div
+              class="profile-section"
+              id="profileSection"
+              style="display: none"
+            >
               <div class="card-header">
-                <h2 class="card-title">Today's Log</h2>
-                <div class="date-and-sync">
-                  <span id="currentDate"></span>
-                  <div class="sync-indicator" id="dashboardSync">
-                    <span class="sync-dot"></span>
-                    <span class="sync-label">Synced</span>
-                  </div>
-                </div>
+                <h2 class="card-title">Your Fitness Profile</h2>
               </div>
 
-              <form id="dailyLogForm">
+              <form id="setupForm">
                 <div class="form-group">
-                  <label for="todayWeight" class="form-label">
-                    Weight (Weekly Requirement)
-                    <span
-                      id="weightStatus"
-                      style="font-size: 0.9rem; color: var(--text-secondary)"
-                    ></span>
-                  </label>
+                  <label for="startingWeight" class="form-label"
+                    >Current Weight (lbs)</label
+                  >
                   <input
                     type="number"
-                    id="todayWeight"
+                    id="startingWeight"
+                    name="startingWeight"
                     class="form-input"
+                    required
                     min="50"
                     max="1000"
                     step="0.1"
@@ -320,975 +184,1127 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="todaySteps" class="form-label">Steps</label>
-                  <input
-                    type="number"
-                    id="todaySteps"
-                    class="form-input"
-                    min="0"
-                    max="100000"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="todayExerciseMinutes" class="form-label"
-                    >Exercise Minutes</label
+                  <label for="goalWeight" class="form-label"
+                    >Goal Weight (lbs)</label
                   >
                   <input
                     type="number"
-                    id="todayExerciseMinutes"
+                    id="goalWeight"
+                    name="goalWeight"
                     class="form-input"
-                    min="0"
-                    max="1440"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="todayExerciseType" class="form-label"
-                    >Exercise Type(s)</label
-                  >
-                  <div class="exercise-selector" id="exerciseSelector">
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="cardio"
-                        value="cardio"
-                        class="exercise-checkbox"
-                      />
-                      <label for="cardio" class="exercise-label">Cardio</label>
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="strength"
-                        value="strength"
-                        class="exercise-checkbox"
-                      />
-                      <label for="strength" class="exercise-label"
-                        >Strength Training</label
-                      >
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="yoga"
-                        value="yoga"
-                        class="exercise-checkbox"
-                      />
-                      <label for="yoga" class="exercise-label"
-                        >Yoga/Stretching</label
-                      >
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="sports"
-                        value="sports"
-                        class="exercise-checkbox"
-                      />
-                      <label for="sports" class="exercise-label">Sports</label>
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="walking"
-                        value="walking"
-                        class="exercise-checkbox"
-                      />
-                      <label for="walking" class="exercise-label"
-                        >Walking</label
-                      >
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="cycling"
-                        value="cycling"
-                        class="exercise-checkbox"
-                      />
-                      <label for="cycling" class="exercise-label"
-                        >Cycling</label
-                      >
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="swimming"
-                        value="swimming"
-                        class="exercise-checkbox"
-                      />
-                      <label for="swimming" class="exercise-label"
-                        >Swimming</label
-                      >
-                    </div>
-                    <div class="exercise-option">
-                      <input
-                        type="checkbox"
-                        id="other"
-                        value="other"
-                        class="exercise-checkbox"
-                      />
-                      <label for="other" class="exercise-label">Other</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="todayWater" class="form-label"
-                    >Water Intake (liters)</label
-                  >
-                  <input
-                    type="number"
-                    id="todayWater"
-                    class="form-input"
-                    min="0"
-                    max="20"
+                    required
+                    min="50"
+                    max="1000"
                     step="0.1"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="dailySteps" class="form-label"
+                    >Daily Steps Goal</label
+                  >
+                  <input
+                    type="number"
+                    id="dailySteps"
+                    name="dailySteps"
+                    class="form-input"
+                    required
+                    min="1000"
+                    max="50000"
+                    value="8000"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="dailyExercise" class="form-label"
+                    >Daily Exercise Minutes Goal</label
+                  >
+                  <input
+                    type="number"
+                    id="dailyExercise"
+                    name="dailyExercise"
+                    class="form-input"
+                    required
+                    min="5"
+                    max="300"
+                    value="30"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="dailyWater" class="form-label"
+                    >Daily Water Goal (liters)</label
+                  >
+                  <input
+                    type="number"
+                    id="dailyWater"
+                    name="dailyWater"
+                    class="form-input"
+                    required
+                    min="0.5"
+                    max="10"
+                    step="0.1"
+                    value="2"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  class="btn btn-success"
+                  class="btn btn-primary"
                   style="width: 100%; margin-top: 1rem"
                 >
-                  💾 Save & Sync Today's Log
+                  🚀 Start My Real-time Fitness Journey
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main App Screen -->
+      <div id="appScreen" class="hidden">
+        <!-- Navigation Tabs -->
+        <div class="tab-navigation">
+          <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+          <button class="tab-btn" data-tab="charts">Progress</button>
+          <button class="tab-btn" data-tab="rewards">Rewards</button>
+          <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboardTab" class="tab-content active">
+          <div class="main-grid">
+            <!-- Main Content -->
+            <div class="content-main">
+              <!-- Daily Logging -->
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Today's Log</h2>
+                  <div class="date-and-sync">
+                    <span id="currentDate"></span>
+                    <div class="sync-indicator" id="dashboardSync">
+                      <span class="sync-dot"></span>
+                      <span class="sync-label">Synced</span>
+                    </div>
+                  </div>
+                </div>
+
+                <form id="dailyLogForm">
+                  <div class="form-group">
+                    <label for="todayWeight" class="form-label">
+                      Weight (Weekly Requirement)
+                      <span
+                        id="weightStatus"
+                        style="font-size: 0.9rem; color: var(--text-secondary)"
+                      ></span>
+                    </label>
+                    <input
+                      type="number"
+                      id="todayWeight"
+                      class="form-input"
+                      min="50"
+                      max="1000"
+                      step="0.1"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="todaySteps" class="form-label">Steps</label>
+                    <input
+                      type="number"
+                      id="todaySteps"
+                      class="form-input"
+                      min="0"
+                      max="100000"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="todayExerciseMinutes" class="form-label"
+                      >Exercise Minutes</label
+                    >
+                    <input
+                      type="number"
+                      id="todayExerciseMinutes"
+                      class="form-input"
+                      min="0"
+                      max="1440"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="todayExerciseType" class="form-label"
+                      >Exercise Type(s)</label
+                    >
+                    <div class="exercise-selector" id="exerciseSelector">
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="cardio"
+                          value="cardio"
+                          class="exercise-checkbox"
+                        />
+                        <label for="cardio" class="exercise-label"
+                          >Cardio</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="strength"
+                          value="strength"
+                          class="exercise-checkbox"
+                        />
+                        <label for="strength" class="exercise-label"
+                          >Strength Training</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="yoga"
+                          value="yoga"
+                          class="exercise-checkbox"
+                        />
+                        <label for="yoga" class="exercise-label"
+                          >Yoga/Stretching</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="sports"
+                          value="sports"
+                          class="exercise-checkbox"
+                        />
+                        <label for="sports" class="exercise-label"
+                          >Sports</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="walking"
+                          value="walking"
+                          class="exercise-checkbox"
+                        />
+                        <label for="walking" class="exercise-label"
+                          >Walking</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="cycling"
+                          value="cycling"
+                          class="exercise-checkbox"
+                        />
+                        <label for="cycling" class="exercise-label"
+                          >Cycling</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="swimming"
+                          value="swimming"
+                          class="exercise-checkbox"
+                        />
+                        <label for="swimming" class="exercise-label"
+                          >Swimming</label
+                        >
+                      </div>
+                      <div class="exercise-option">
+                        <input
+                          type="checkbox"
+                          id="other"
+                          value="other"
+                          class="exercise-checkbox"
+                        />
+                        <label for="other" class="exercise-label">Other</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="todayWater" class="form-label"
+                      >Water Intake (liters)</label
+                    >
+                    <input
+                      type="number"
+                      id="todayWater"
+                      class="form-input"
+                      min="0"
+                      max="20"
+                      step="0.1"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="btn btn-success"
+                    style="width: 100%; margin-top: 1rem"
+                  >
+                    💾 Save & Sync to Firebase
+                  </button>
+                </form>
+              </div>
+
+              <!-- Food & Wellness Score -->
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Food & Wellness Score</h2>
+                  <span>Need 3+ points for daily streak</span>
+                </div>
+
+                <ul class="wellness-checklist" id="wellnessChecklist">
+                  <li class="wellness-item">
+                    <input
+                      type="checkbox"
+                      class="wellness-checkbox"
+                      data-wellness="sugary-drinks"
+                    />
+                    <div class="wellness-content">
+                      <div class="wellness-title">Avoided Sugary Drinks</div>
+                      <div class="wellness-description">
+                        No soda, juice, sweetened coffee/tea, energy drinks.
+                        Reduces empty calories and blood sugar spikes.
+                      </div>
+                    </div>
+                  </li>
+
+                  <li class="wellness-item">
+                    <input
+                      type="checkbox"
+                      class="wellness-checkbox"
+                      data-wellness="fruits-vegetables"
+                    />
+                    <div class="wellness-content">
+                      <div class="wellness-title">
+                        Ate 5+ Servings of Fruits & Vegetables
+                      </div>
+                      <div class="wellness-description">
+                        Fresh, frozen, or cooked all count. Provides fiber,
+                        vitamins, and phytonutrients.
+                      </div>
+                    </div>
+                  </li>
+
+                  <li class="wellness-item">
+                    <input
+                      type="checkbox"
+                      class="wellness-checkbox"
+                      data-wellness="portion-control"
+                    />
+                    <div class="wellness-content">
+                      <div class="wellness-title">
+                        Practiced Portion Control
+                      </div>
+                      <div class="wellness-description">
+                        Used smaller plates, stopped when satisfied, followed
+                        hand-size portion guides.
+                      </div>
+                    </div>
+                  </li>
+
+                  <li class="wellness-item">
+                    <input
+                      type="checkbox"
+                      class="wellness-checkbox"
+                      data-wellness="no-late-eating"
+                    />
+                    <div class="wellness-content">
+                      <div class="wellness-title">Did Not Eat After 8 PM</div>
+                      <div class="wellness-description">
+                        No late-night snacking. Helps with digestion, sleep, and
+                        curbing mindless eating.
+                      </div>
+                    </div>
+                  </li>
+
+                  <li class="wellness-item">
+                    <input
+                      type="checkbox"
+                      class="wellness-checkbox"
+                      data-wellness="sleep"
+                    />
+                    <div class="wellness-content">
+                      <div class="wellness-title">Got 7+ Hours of Sleep</div>
+                      <div class="wellness-description">
+                        Quality rest for recovery. Impacts metabolism, hunger
+                        hormones, and decision-making.
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="wellness-score">
+                  <span>Current Score:</span>
+                  <div class="score-indicator"></div>
+                  <div class="score-indicator"></div>
+                  <div class="score-indicator"></div>
+                  <div class="score-indicator"></div>
+                  <div class="score-indicator"></div>
+                  <span id="wellnessScoreText">0/5</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+              <!-- Current Streak -->
+              <div class="streak-counter">
+                <span class="streak-number" id="currentStreak">0</span>
+                <div class="streak-label">Day Streak</div>
+              </div>
+
+              <!-- Streak Breakdown -->
+              <div class="streak-grid">
+                <div class="streak-item" id="stepsStreak">
+                  <div class="streak-value">0</div>
+                  <div class="streak-type">Steps</div>
+                </div>
+                <div class="streak-item" id="exerciseStreak">
+                  <div class="streak-value">0</div>
+                  <div class="streak-type">Exercise</div>
+                </div>
+                <div class="streak-item" id="waterStreak">
+                  <div class="streak-value">0</div>
+                  <div class="streak-type">Water</div>
+                </div>
+                <div class="streak-item" id="wellnessStreak">
+                  <div class="streak-value">0</div>
+                  <div class="streak-type">Wellness</div>
+                </div>
+              </div>
+
+              <!-- Quick Stats -->
+              <div style="margin-top: 2rem">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary)">
+                  Quick Stats
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                  <div style="display: flex; justify-content: space-between">
+                    <span>Current Weight:</span>
+                    <span id="currentWeightDisplay">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between">
+                    <span>Goal Weight:</span>
+                    <span id="goalWeightDisplay">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between">
+                    <span>To Go:</span>
+                    <span id="weightToGoDisplay">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Charts Tab -->
+        <div id="chartsTab" class="tab-content hidden">
+          <div class="charts-container">
+            <!-- Chart Controls -->
+            <div class="chart-controls">
+              <button class="chart-btn active" data-period="7">7 Days</button>
+              <button class="chart-btn" data-period="30">30 Days</button>
+              <button class="chart-btn" data-period="all">All Time</button>
+            </div>
+
+            <!-- Weight Progress Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <h2 class="card-title">Weight Progress</h2>
+                <span id="weightTrend"></span>
+              </div>
+              <div class="chart-container">
+                <canvas id="weightChart" width="800" height="400"></canvas>
+              </div>
+            </div>
+
+            <!-- Activity Summary Chart -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <h2 class="card-title">Daily Activity Summary</h2>
+                <span id="activityPeriod">Last 7 Days</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="activityChart" width="800" height="400"></canvas>
+              </div>
+            </div>
+
+            <!-- Streak Calendar -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <h2 class="card-title">Streak Calendar</h2>
+                <div class="calendar-controls">
+                  <button id="prevMonth">‹</button>
+                  <span id="currentMonth"></span>
+                  <button id="nextMonth">›</button>
+                </div>
+              </div>
+              <div class="calendar-container" id="streakCalendar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rewards Tab -->
+        <div id="rewardsTab" class="tab-content hidden">
+          <div class="rewards-container">
+            <!-- Add Custom Reward -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Add Custom Reward</h2>
+              </div>
+              <form id="rewardForm">
+                <div class="form-group">
+                  <label for="rewardType" class="form-label">Reward Type</label>
+                  <select
+                    id="rewardType"
+                    name="rewardType"
+                    class="form-select"
+                    required
+                  >
+                    <option value>Select reward type</option>
+                    <option value="streak">Streak Milestone</option>
+                    <option value="weight">Weight Loss</option>
+                    <option value="combo">Combined (Streak + Weight)</option>
+                  </select>
+                </div>
+
+                <div class="reward-criteria hidden" id="streakCriteria">
+                  <div class="form-group">
+                    <label for="streakDays" class="form-label"
+                      >Streak Days</label
+                    >
+                    <input
+                      type="number"
+                      id="streakDays"
+                      name="streakDays"
+                      class="form-input"
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+                </div>
+
+                <div class="reward-criteria hidden" id="weightCriteria">
+                  <div class="form-group">
+                    <label for="weightLoss" class="form-label"
+                      >Weight Loss (lbs)</label
+                    >
+                    <input
+                      type="number"
+                      id="weightLoss"
+                      name="weightLoss"
+                      class="form-input"
+                      min="1"
+                      step="0.1"
+                    />
+                  </div>
+                </div>
+
+                <div class="reward-criteria hidden" id="comboCriteria">
+                  <div class="form-group">
+                    <label for="comboStreak" class="form-label"
+                      >Streak Days</label
+                    >
+                    <input
+                      type="number"
+                      id="comboStreak"
+                      name="comboStreak"
+                      class="form-input"
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="comboWeight" class="form-label"
+                      >Weight Loss (lbs)</label
+                    >
+                    <input
+                      type="number"
+                      id="comboWeight"
+                      name="comboWeight"
+                      class="form-input"
+                      min="1"
+                      step="0.1"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="rewardDescription" class="form-label"
+                    >Reward Description</label
+                  >
+                  <input
+                    type="text"
+                    id="rewardDescription"
+                    name="rewardDescription"
+                    class="form-input"
+                    placeholder="e.g., Spa day, New workout clothes, Cheat meal"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  Add Reward
                 </button>
               </form>
             </div>
 
-            <!-- Food & Wellness Score -->
+            <!-- Default Milestones -->
             <div class="card">
               <div class="card-header">
-                <h2 class="card-title">Food & Wellness Score</h2>
-                <span>Need 3+ points for daily streak</span>
+                <h2 class="card-title">Default Milestones</h2>
+                <span>Customize your rewards for these milestones</span>
               </div>
-
-              <ul class="wellness-checklist" id="wellnessChecklist">
-                <li class="wellness-item">
-                  <input
-                    type="checkbox"
-                    class="wellness-checkbox"
-                    data-wellness="sugary-drinks"
-                  />
-                  <div class="wellness-content">
-                    <div class="wellness-title">Avoided Sugary Drinks</div>
-                    <div class="wellness-description">
-                      No soda, juice, sweetened coffee/tea, energy drinks.
-                      Reduces empty calories and blood sugar spikes.
-                    </div>
-                  </div>
-                </li>
-
-                <li class="wellness-item">
-                  <input
-                    type="checkbox"
-                    class="wellness-checkbox"
-                    data-wellness="fruits-vegetables"
-                  />
-                  <div class="wellness-content">
-                    <div class="wellness-title">
-                      Ate 5+ Servings of Fruits & Vegetables
-                    </div>
-                    <div class="wellness-description">
-                      Fresh, frozen, or cooked all count. Provides fiber,
-                      vitamins, and phytonutrients.
-                    </div>
-                  </div>
-                </li>
-
-                <li class="wellness-item">
-                  <input
-                    type="checkbox"
-                    class="wellness-checkbox"
-                    data-wellness="portion-control"
-                  />
-                  <div class="wellness-content">
-                    <div class="wellness-title">Practiced Portion Control</div>
-                    <div class="wellness-description">
-                      Used smaller plates, stopped when satisfied, followed
-                      hand-size portion guides.
-                    </div>
-                  </div>
-                </li>
-
-                <li class="wellness-item">
-                  <input
-                    type="checkbox"
-                    class="wellness-checkbox"
-                    data-wellness="no-late-eating"
-                  />
-                  <div class="wellness-content">
-                    <div class="wellness-title">Did Not Eat After 8 PM</div>
-                    <div class="wellness-description">
-                      No late-night snacking. Helps with digestion, sleep, and
-                      curbing mindless eating.
-                    </div>
-                  </div>
-                </li>
-
-                <li class="wellness-item">
-                  <input
-                    type="checkbox"
-                    class="wellness-checkbox"
-                    data-wellness="sleep"
-                  />
-                  <div class="wellness-content">
-                    <div class="wellness-title">Got 7+ Hours of Sleep</div>
-                    <div class="wellness-description">
-                      Quality rest for recovery. Impacts metabolism, hunger
-                      hormones, and decision-making.
-                    </div>
-                  </div>
-                </li>
-              </ul>
-
-              <div class="wellness-score">
-                <span>Current Score:</span>
-                <div class="score-indicator"></div>
-                <div class="score-indicator"></div>
-                <div class="score-indicator"></div>
-                <div class="score-indicator"></div>
-                <div class="score-indicator"></div>
-                <span id="wellnessScoreText">0/5</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sidebar -->
-          <div class="sidebar">
-            <!-- Current Streak -->
-            <div class="streak-counter">
-              <span class="streak-number" id="currentStreak">0</span>
-              <div class="streak-label">Day Streak</div>
+              <div class="milestone-grid" id="defaultMilestones"></div>
             </div>
 
-            <!-- Streak Breakdown -->
-            <div class="streak-grid">
-              <div class="streak-item" id="stepsStreak">
-                <div class="streak-value">0</div>
-                <div class="streak-type">Steps</div>
+            <!-- Custom Rewards -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Your Custom Rewards</h2>
               </div>
-              <div class="streak-item" id="exerciseStreak">
-                <div class="streak-value">0</div>
-                <div class="streak-type">Exercise</div>
-              </div>
-              <div class="streak-item" id="waterStreak">
-                <div class="streak-value">0</div>
-                <div class="streak-type">Water</div>
-              </div>
-              <div class="streak-item" id="wellnessStreak">
-                <div class="streak-value">0</div>
-                <div class="streak-type">Wellness</div>
-              </div>
+              <div class="rewards-list" id="customRewardsList"></div>
             </div>
 
-            <!-- Quick Stats -->
-            <div style="margin-top: 2rem">
-              <h3 style="margin-bottom: 1rem; color: var(--text-primary)">
-                Quick Stats
-              </h3>
-              <div style="display: flex; flex-direction: column; gap: 0.5rem">
-                <div style="display: flex; justify-content: space-between">
-                  <span>Current Weight:</span>
-                  <span id="currentWeightDisplay">--</span>
-                </div>
-                <div style="display: flex; justify-content: space-between">
-                  <span>Goal Weight:</span>
-                  <span id="goalWeightDisplay">--</span>
-                </div>
-                <div style="display: flex; justify-content: space-between">
-                  <span>To Go:</span>
-                  <span id="weightToGoDisplay">--</span>
-                </div>
+            <!-- Achievement History -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Achievement History</h2>
               </div>
+              <div class="achievements-list" id="achievementHistory"></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Progress Charts Tab -->
-      <div id="chartsTab" class="tab-content hidden">
-        <div class="charts-container">
-          <!-- Chart Controls -->
-          <div class="chart-controls">
-            <button class="chart-btn active" data-period="7">7 Days</button>
-            <button class="chart-btn" data-period="30">30 Days</button>
-            <button class="chart-btn" data-period="all">All Time</button>
-          </div>
-
-          <!-- Weight Progress Chart -->
-          <div class="card chart-card">
-            <div class="card-header">
-              <h2 class="card-title">Weight Progress</h2>
-              <span id="weightTrend"></span>
-            </div>
-            <div class="chart-container">
-              <canvas id="weightChart" width="800" height="400"></canvas>
-            </div>
-          </div>
-
-          <!-- Activity Summary Chart -->
-          <div class="card chart-card">
-            <div class="card-header">
-              <h2 class="card-title">Daily Activity Summary</h2>
-              <span id="activityPeriod">Last 7 Days</span>
-            </div>
-            <div class="chart-container">
-              <canvas id="activityChart" width="800" height="400"></canvas>
-            </div>
-          </div>
-
-          <!-- Streak Calendar -->
-          <div class="card chart-card">
-            <div class="card-header">
-              <h2 class="card-title">Streak Calendar</h2>
-              <div class="calendar-controls">
-                <button id="prevMonth">‹</button>
-                <span id="currentMonth"></span>
-                <button id="nextMonth">›</button>
-              </div>
-            </div>
-            <div class="calendar-container" id="streakCalendar"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Rewards Tab -->
-      <div id="rewardsTab" class="tab-content hidden">
-        <div class="rewards-container">
-          <!-- Add Custom Reward -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Add Custom Reward</h2>
-            </div>
-            <form id="rewardForm">
-              <div class="form-group">
-                <label for="rewardType" class="form-label">Reward Type</label>
-                <select
-                  id="rewardType"
-                  name="rewardType"
-                  class="form-select"
-                  required
-                >
-                  <option value="">Select reward type</option>
-                  <option value="streak">Streak Milestone</option>
-                  <option value="weight">Weight Loss</option>
-                  <option value="combo">Combined (Streak + Weight)</option>
-                </select>
+        <!-- Settings Tab -->
+        <div id="settingsTab" class="tab-content hidden">
+          <div class="settings-container">
+            <!-- Firebase Sync Settings -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">🔥 Firebase Real-time Sync</h2>
               </div>
 
-              <div class="reward-criteria hidden" id="streakCriteria">
-                <div class="form-group">
-                  <label for="streakDays" class="form-label">Streak Days</label>
-                  <input
-                    type="number"
-                    id="streakDays"
-                    name="streakDays"
-                    class="form-input"
-                    min="1"
-                    max="365"
-                  />
+              <div class="setting-group">
+                <h3>Connection Status</h3>
+                <div class="connection-info" id="connectionInfo">
+                  <div class="connection-row">
+                    <span class="connection-label">Status:</span>
+                    <span class="connection-value" id="settingsConnectionStatus"
+                      >Checking...</span
+                    >
+                  </div>
+                  <div class="connection-row">
+                    <span class="connection-label">Last Sync:</span>
+                    <span class="connection-value" id="lastSyncTime"
+                      >Never</span
+                    >
+                  </div>
+                  <div class="connection-row">
+                    <span class="connection-label">Pending Syncs:</span>
+                    <span class="connection-value" id="pendingSyncs">0</span>
+                  </div>
                 </div>
-              </div>
 
-              <div class="reward-criteria hidden" id="weightCriteria">
-                <div class="form-group">
-                  <label for="weightLoss" class="form-label"
-                    >Weight Loss (lbs)</label
-                  >
-                  <input
-                    type="number"
-                    id="weightLoss"
-                    name="weightLoss"
-                    class="form-input"
-                    min="1"
-                    step="0.1"
-                  />
-                </div>
-              </div>
-
-              <div class="reward-criteria hidden" id="comboCriteria">
-                <div class="form-group">
-                  <label for="comboStreak" class="form-label"
-                    >Streak Days</label
-                  >
-                  <input
-                    type="number"
-                    id="comboStreak"
-                    name="comboStreak"
-                    class="form-input"
-                    min="1"
-                    max="365"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="comboWeight" class="form-label"
-                    >Weight Loss (lbs)</label
-                  >
-                  <input
-                    type="number"
-                    id="comboWeight"
-                    name="comboWeight"
-                    class="form-input"
-                    min="1"
-                    step="0.1"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="rewardDescription" class="form-label"
-                  >Reward Description</label
-                >
-                <input
-                  type="text"
-                  id="rewardDescription"
-                  name="rewardDescription"
-                  class="form-input"
-                  placeholder="e.g., Spa day, New workout clothes, Cheat meal"
-                  required
-                />
-              </div>
-
-              <button type="submit" class="btn btn-primary">Add Reward</button>
-            </form>
-          </div>
-
-          <!-- Default Milestones -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Default Milestones</h2>
-              <span>Customize your rewards for these milestones</span>
-            </div>
-            <div class="milestone-grid" id="defaultMilestones"></div>
-          </div>
-
-          <!-- Custom Rewards -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Your Custom Rewards</h2>
-            </div>
-            <div class="rewards-list" id="customRewardsList"></div>
-          </div>
-
-          <!-- Achievement History -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Achievement History</h2>
-            </div>
-            <div class="achievements-list" id="achievementHistory"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings Tab -->
-      <div id="settingsTab" class="tab-content hidden">
-        <div class="settings-container">
-          <!-- Cloud Sync Settings -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">☁️ Cloud Sync Settings</h2>
-            </div>
-
-            <div class="setting-group">
-              <h3>Connection Status</h3>
-              <div class="connection-info" id="connectionInfo">
-                <div class="connection-row">
-                  <span class="connection-label">Status:</span>
-                  <span class="connection-value" id="settingsConnectionStatus"
-                    >Checking...</span
-                  >
-                </div>
-                <div class="connection-row">
-                  <span class="connection-label">Last Sync:</span>
-                  <span class="connection-value" id="lastSyncTime">Never</span>
-                </div>
-                <div class="connection-row">
-                  <span class="connection-label">Pending Syncs:</span>
-                  <span class="connection-value" id="pendingSyncs">0</span>
-                </div>
-              </div>
-
-              <div class="button-group">
-                <button class="btn btn-primary" id="forceSyncBtn">
-                  🔄 Force Sync Now
-                </button>
-                <button class="btn btn-secondary" id="testConnectionBtn">
-                  🔗 Test Connection
-                </button>
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <h3>API Configuration</h3>
-              <div class="form-group">
-                <label for="settingsApiKey" class="form-label"
-                  >Airtable Personal Access Token</label
-                >
-                <div class="input-with-icon">
-                  <input
-                    type="password"
-                    id="settingsApiKey"
-                    class="form-input"
-                    placeholder="API key is set"
-                    readonly
-                  />
-                  <button
-                    type="button"
-                    class="toggle-password"
-                    id="toggleSettingsApiKey"
-                  >
-                    👁️
+                <div class="button-group">
+                  <button class="btn btn-primary" id="forceSyncBtn">
+                    🔄 Force Sync Now
+                  </button>
+                  <button class="btn btn-secondary" id="testConnectionBtn">
+                    🔗 Test Connection
                   </button>
                 </div>
-                <small class="form-help">
-                  Your API key is stored securely in your browser
-                </small>
               </div>
 
-              <button class="btn btn-warning" id="updateApiKeyBtn">
-                🔑 Update API Key
-              </button>
-            </div>
-          </div>
+              <div class="setting-group">
+                <h3>Firebase Configuration</h3>
+                <div class="form-group">
+                  <label for="settingsApiKey" class="form-label"
+                    >Firebase API Key</label
+                  >
+                  <div class="input-with-icon">
+                    <input
+                      type="password"
+                      id="settingsApiKey"
+                      class="form-input"
+                      placeholder="API key is set"
+                      readonly
+                    />
+                    <button
+                      type="button"
+                      class="toggle-password"
+                      id="toggleSettingsApiKey"
+                    >
+                      👁️
+                    </button>
+                  </div>
+                  <small class="form-help">
+                    Your Firebase credentials are stored securely in your
+                    browser
+                  </small>
+                </div>
 
-          <!-- App Preferences -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">⚙️ App Preferences</h2>
-            </div>
-
-            <div class="setting-group">
-              <h3>Theme & Display</h3>
-              <div class="setting-item">
-                <input
-                  type="radio"
-                  id="themeLight"
-                  name="themePreference"
-                  value="light"
-                  class="setting-radio"
-                />
-                <label for="themeLight" class="setting-label">Light Mode</label>
-              </div>
-              <div class="setting-item">
-                <input
-                  type="radio"
-                  id="themeDark"
-                  name="themePreference"
-                  value="dark"
-                  class="setting-radio"
-                />
-                <label for="themeDark" class="setting-label">Dark Mode</label>
-              </div>
-              <div class="setting-item">
-                <input
-                  type="radio"
-                  id="themeSystem"
-                  name="themePreference"
-                  value="system"
-                  class="setting-radio"
-                  checked
-                />
-                <label for="themeSystem" class="setting-label"
-                  >Follow System Preference</label
-                >
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <h3>Units & Format</h3>
-              <div class="form-group">
-                <label for="weightUnit" class="form-label">Weight Unit</label>
-                <select id="weightUnit" class="form-select">
-                  <option value="lbs">Pounds (lbs)</option>
-                  <option value="kg">Kilograms (kg)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="dateFormat" class="form-label">Date Format</label>
-                <select id="dateFormat" class="form-select">
-                  <option value="US">MM/DD/YYYY (US)</option>
-                  <option value="EU">DD/MM/YYYY (European)</option>
-                  <option value="ISO">YYYY-MM-DD (ISO)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="weekStart" class="form-label">Week Starts On</label>
-                <select id="weekStart" class="form-select">
-                  <option value="sunday">Sunday</option>
-                  <option value="monday">Monday</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Goal Management -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">🎯 Goal Management</h2>
-            </div>
-
-            <div class="setting-group">
-              <h3>Daily Goals</h3>
-              <p>
-                Modify your daily fitness targets. Changes apply immediately and
-                sync to cloud.
-              </p>
-
-              <div class="form-group">
-                <label for="settingsSteps" class="form-label"
-                  >Daily Steps Goal</label
-                >
-                <input
-                  type="number"
-                  id="settingsSteps"
-                  class="form-input"
-                  min="1000"
-                  max="50000"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="settingsExercise" class="form-label"
-                  >Daily Exercise Minutes</label
-                >
-                <input
-                  type="number"
-                  id="settingsExercise"
-                  class="form-input"
-                  min="5"
-                  max="300"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="settingsWater" class="form-label"
-                  >Daily Water Goal (liters)</label
-                >
-                <input
-                  type="number"
-                  id="settingsWater"
-                  class="form-input"
-                  min="0.5"
-                  max="10"
-                  step="0.1"
-                />
-              </div>
-
-              <button class="btn btn-primary" id="updateGoalsBtn">
-                💾 Save Daily Goals
-              </button>
-            </div>
-
-            <div class="setting-group">
-              <h3>Weight Goals</h3>
-              <p>
-                Update your weight targets. This preserves your streak history
-                and syncs to cloud.
-              </p>
-
-              <div class="form-group">
-                <label for="settingsStartingWeight" class="form-label"
-                  >Starting Weight (lbs)</label
-                >
-                <input
-                  type="number"
-                  id="settingsStartingWeight"
-                  class="form-input"
-                  min="50"
-                  max="1000"
-                  step="0.1"
-                  readonly
-                />
-                <small class="form-help"
-                  >Starting weight cannot be changed to preserve data
-                  integrity</small
-                >
-              </div>
-
-              <div class="form-group">
-                <label for="settingsGoalWeight" class="form-label"
-                  >Goal Weight (lbs)</label
-                >
-                <input
-                  type="number"
-                  id="settingsGoalWeight"
-                  class="form-input"
-                  min="50"
-                  max="1000"
-                  step="0.1"
-                />
-              </div>
-
-              <button class="btn btn-primary" id="updateWeightGoalsBtn">
-                💾 Save Weight Goals
-              </button>
-            </div>
-          </div>
-
-          <!-- Data Management -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">📊 Data Management</h2>
-            </div>
-
-            <div class="setting-group">
-              <h3>Backup & Export</h3>
-              <p>
-                Download your fitness data for backup or migration purposes.
-              </p>
-              <div class="button-group">
-                <button class="btn btn-primary" id="exportCloudDataBtn">
-                  💾 Export Cloud Data
-                </button>
-                <button class="btn btn-secondary" id="exportLocalDataBtn">
-                  📱 Export Local Backup
+                <button class="btn btn-warning" id="updateApiKeyBtn">
+                  🔑 Update Firebase Credentials
                 </button>
               </div>
             </div>
 
-            <div class="setting-group">
-              <h3>Import Data</h3>
-              <p>
-                Restore data from a backup file. This will sync to your cloud
-                storage.
-              </p>
-              <div class="form-group">
-                <label for="importFile" class="form-label"
-                  >Select Backup File</label
-                >
-                <input
-                  type="file"
-                  id="importFile"
-                  class="form-input"
-                  accept=".json"
-                />
+            <!-- App Preferences -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">⚙️ App Preferences</h2>
               </div>
-              <button class="btn btn-warning" id="importDataBtn">
-                📥 Import Data
-              </button>
-            </div>
 
-            <div class="setting-group">
-              <h3>Sync Preferences</h3>
-              <div class="setting-item">
-                <input
-                  type="checkbox"
-                  id="autoSyncEnabled"
-                  class="setting-checkbox"
-                  checked
-                />
-                <label for="autoSyncEnabled" class="setting-label">
-                  Automatic sync after data changes
-                </label>
-              </div>
-              <div class="setting-item">
-                <input
-                  type="checkbox"
-                  id="syncNotifications"
-                  class="setting-checkbox"
-                  checked
-                />
-                <label for="syncNotifications" class="setting-label">
-                  Show sync status notifications
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Wellness Customization -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">🌱 Wellness Customization</h2>
-            </div>
-
-            <div class="setting-group">
-              <h3>Wellness Checklist Items</h3>
-              <p>View and understand your 5-point wellness scoring system.</p>
-
-              <div class="wellness-items-display">
-                <div class="wellness-display-item">
-                  <div class="wellness-display-title">
-                    1. Avoided Sugary Drinks
-                  </div>
-                  <div class="wellness-display-description">
-                    No soda, juice, sweetened coffee/tea, energy drinks.
-                  </div>
+              <div class="setting-group">
+                <h3>Theme & Display</h3>
+                <div class="setting-item">
+                  <input
+                    type="radio"
+                    id="themeLight"
+                    name="themePreference"
+                    value="light"
+                    class="setting-radio"
+                  />
+                  <label for="themeLight" class="setting-label"
+                    >Light Mode</label
+                  >
                 </div>
-                <div class="wellness-display-item">
-                  <div class="wellness-display-title">
-                    2. Ate 5+ Servings of Fruits & Vegetables
-                  </div>
-                  <div class="wellness-display-description">
-                    Fresh, frozen, or cooked all count.
-                  </div>
+                <div class="setting-item">
+                  <input
+                    type="radio"
+                    id="themeDark"
+                    name="themePreference"
+                    value="dark"
+                    class="setting-radio"
+                  />
+                  <label for="themeDark" class="setting-label">Dark Mode</label>
                 </div>
-                <div class="wellness-display-item">
-                  <div class="wellness-display-title">
-                    3. Practiced Portion Control
-                  </div>
-                  <div class="wellness-display-description">
-                    Used smaller plates, stopped when satisfied.
-                  </div>
-                </div>
-                <div class="wellness-display-item">
-                  <div class="wellness-display-title">
-                    4. Did Not Eat After 8 PM
-                  </div>
-                  <div class="wellness-display-description">
-                    No late-night snacking.
-                  </div>
-                </div>
-                <div class="wellness-display-item">
-                  <div class="wellness-display-title">
-                    5. Got 7+ Hours of Sleep
-                  </div>
-                  <div class="wellness-display-description">
-                    Quality rest for recovery.
-                  </div>
+                <div class="setting-item">
+                  <input
+                    type="radio"
+                    id="themeSystem"
+                    name="themePreference"
+                    value="system"
+                    class="setting-radio"
+                    checked
+                  />
+                  <label for="themeSystem" class="setting-label"
+                    >Follow System Preference</label
+                  >
                 </div>
               </div>
 
-              <div class="info-box">
-                <strong>Scoring:</strong> You need 3 or more points daily to
-                maintain your wellness streak. This flexible system lets you
-                have off days while still making progress.
+              <div class="setting-group">
+                <h3>Units & Format</h3>
+                <div class="form-group">
+                  <label for="weightUnit" class="form-label">Weight Unit</label>
+                  <select id="weightUnit" class="form-select">
+                    <option value="lbs">Pounds (lbs)</option>
+                    <option value="kg">Kilograms (kg)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="dateFormat" class="form-label">Date Format</label>
+                  <select id="dateFormat" class="form-select">
+                    <option value="US">MM/DD/YYYY (US)</option>
+                    <option value="EU">DD/MM/YYYY (European)</option>
+                    <option value="ISO">YYYY-MM-DD (ISO)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="weekStart" class="form-label"
+                    >Week Starts On</label
+                  >
+                  <select id="weekStart" class="form-select">
+                    <option value="sunday">Sunday</option>
+                    <option value="monday">Monday</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div class="setting-group">
-              <h3>Goal Thresholds</h3>
-              <p>
-                Customize what counts as "meeting" each daily goal. Changes sync
-                to cloud.
-              </p>
-
-              <div class="setting-item">
-                <input
-                  type="checkbox"
-                  id="allowPartialSteps"
-                  class="setting-checkbox"
-                />
-                <label for="allowPartialSteps" class="setting-label">
-                  Count 90% of steps goal as "met" (more forgiving)
-                </label>
+            <!-- Goal Management -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">🎯 Goal Management</h2>
               </div>
 
-              <div class="setting-item">
-                <input
-                  type="checkbox"
-                  id="allowPartialExercise"
-                  class="setting-checkbox"
-                />
-                <label for="allowPartialExercise" class="setting-label">
-                  Count 80% of exercise goal as "met" (more forgiving)
-                </label>
+              <div class="setting-group">
+                <h3>Daily Goals</h3>
+                <p>
+                  Modify your daily fitness targets. Changes sync instantly to
+                  Firebase and update across all devices.
+                </p>
+
+                <div class="form-group">
+                  <label for="settingsSteps" class="form-label"
+                    >Daily Steps Goal</label
+                  >
+                  <input
+                    type="number"
+                    id="settingsSteps"
+                    class="form-input"
+                    min="1000"
+                    max="50000"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsExercise" class="form-label"
+                    >Daily Exercise Minutes</label
+                  >
+                  <input
+                    type="number"
+                    id="settingsExercise"
+                    class="form-input"
+                    min="5"
+                    max="300"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsWater" class="form-label"
+                    >Daily Water Goal (liters)</label
+                  >
+                  <input
+                    type="number"
+                    id="settingsWater"
+                    class="form-input"
+                    min="0.5"
+                    max="10"
+                    step="0.1"
+                  />
+                </div>
+
+                <button class="btn btn-primary" id="updateGoalsBtn">
+                  💾 Save Daily Goals
+                </button>
               </div>
 
-              <div class="setting-item">
-                <input
-                  type="checkbox"
-                  id="strictWellness"
-                  class="setting-checkbox"
-                />
-                <label for="strictWellness" class="setting-label">
-                  Require 4+ wellness points instead of 3+ (more challenging)
-                </label>
+              <div class="setting-group">
+                <h3>Weight Goals</h3>
+                <p>
+                  Update your weight targets. This preserves your streak history
+                  and syncs instantly to Firebase.
+                </p>
+
+                <div class="form-group">
+                  <label for="settingsStartingWeight" class="form-label"
+                    >Starting Weight (lbs)</label
+                  >
+                  <input
+                    type="number"
+                    id="settingsStartingWeight"
+                    class="form-input"
+                    min="50"
+                    max="1000"
+                    step="0.1"
+                    readonly
+                  />
+                  <small class="form-help"
+                    >Starting weight cannot be changed to preserve data
+                    integrity</small
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsGoalWeight" class="form-label"
+                    >Goal Weight (lbs)</label
+                  >
+                  <input
+                    type="number"
+                    id="settingsGoalWeight"
+                    class="form-input"
+                    min="50"
+                    max="1000"
+                    step="0.1"
+                  />
+                </div>
+
+                <button class="btn btn-primary" id="updateWeightGoalsBtn">
+                  💾 Save Weight Goals
+                </button>
               </div>
             </div>
-          </div>
 
-          <!-- App Information -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">ℹ️ App Information</h2>
-            </div>
+            <!-- Data Management -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">📊 Data Management</h2>
+              </div>
 
-            <div class="app-info">
-              <div class="info-row">
-                <span class="info-label">Version:</span>
-                <span class="info-value">Cloud v1.1.0</span>
+              <div class="setting-group">
+                <h3>Backup & Export</h3>
+                <p>
+                  Download your fitness data for backup or migration purposes.
+                </p>
+                <div class="button-group">
+                  <button class="btn btn-primary" id="exportCloudDataBtn">
+                    💾 Export Firebase Data
+                  </button>
+                  <button class="btn btn-secondary" id="exportLocalDataBtn">
+                    📱 Export Local Backup
+                  </button>
+                </div>
               </div>
-              <div class="info-row">
-                <span class="info-label">Storage:</span>
-                <span class="info-value">Airtable Cloud</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Data Entries:</span>
-                <span class="info-value" id="totalDataEntries">0</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Storage Used:</span>
-                <span class="info-value" id="storageUsed">Calculating...</span>
-              </div>
-            </div>
 
-            <div class="setting-group">
-              <h3>About This Version</h3>
-              <p>
-                This cloud-enabled version of BribeYourselfFit stores your
-                fitness data securely using Airtable, allowing you to access
-                your data from any device with the power of a structured
-                database.
-              </p>
-              <div class="button-group">
-                <button class="btn btn-secondary" id="viewStatsBtn">
-                  📈 View App Statistics
+              <div class="setting-group">
+                <h3>Import Data</h3>
+                <p>
+                  Restore data from a backup file. This will sync to Firebase in
+                  real-time.
+                </p>
+                <div class="form-group">
+                  <label for="importFile" class="form-label"
+                    >Select Backup File</label
+                  >
+                  <input
+                    type="file"
+                    id="importFile"
+                    class="form-input"
+                    accept=".json"
+                  />
+                </div>
+                <button class="btn btn-warning" id="importDataBtn">
+                  📥 Import & Sync to Firebase
                 </button>
-                <a
-                  href="https://github.com/TheBIMsider/BYF/tree/airtable-version"
-                  target="_blank"
-                  class="btn btn-secondary"
-                >
-                  🔗 View on GitHub
-                </a>
               </div>
             </div>
-          </div>
 
-          <!-- Danger Zone -->
-          <div class="card danger-zone">
-            <div class="card-header">
-              <h2 class="card-title">⚠️ Danger Zone</h2>
-            </div>
+            <!-- Real-time Sync Preferences -->
+            <div class="card">
+              <div class="setting-group">
+                <h3>Real-time Sync Preferences</h3>
+                <div class="setting-item">
+                  <input
+                    type="checkbox"
+                    id="autoSyncEnabled"
+                    class="setting-checkbox"
+                    checked
+                  />
+                  <label for="autoSyncEnabled" class="setting-label">
+                    Automatic sync to Firebase after data changes
+                  </label>
+                </div>
+                <div class="setting-item">
+                  <input
+                    type="checkbox"
+                    id="syncNotifications"
+                    class="setting-checkbox"
+                    checked
+                  />
+                  <label for="syncNotifications" class="setting-label">
+                    Show real-time sync notifications
+                  </label>
+                </div>
+              </div>
 
-            <div class="setting-group">
-              <h3>Reset Data</h3>
-              <p class="danger-text">
-                These actions permanently delete data and cannot be undone.
-                Export your data first as a backup!
-              </p>
+              <!-- Wellness Customization -->
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">🌱 Wellness Customization</h2>
+                </div>
 
-              <div class="button-group">
-                <button class="btn btn-warning" id="resetStreaksBtn">
-                  🔄 Reset All Streaks
-                </button>
-                <button class="btn btn-danger" id="clearTodayBtn">
-                  🗑️ Clear Today's Log
-                </button>
-                <button class="btn btn-danger" id="resetProfileBtn">
-                  👤 Reset Profile Only
-                </button>
-                <button class="btn btn-danger" id="resetLogsBtn">
-                  📋 Clear All Daily Logs
-                </button>
-                <button class="btn btn-danger" id="resetLocalDataBtn">
-                  📱 Clear Browser Cache
-                </button>
-                <button class="btn btn-danger" id="resetCloudDataBtn">
-                  ☁️ Delete Cloud Data
-                </button>
-                <button class="btn btn-danger" id="resetAllDataBtn">
-                  💥 Reset Everything
-                </button>
+                <div class="setting-group">
+                  <h3>Wellness Checklist Items</h3>
+                  <p>
+                    View and understand your 5-point wellness scoring system.
+                  </p>
+
+                  <div class="wellness-items-display">
+                    <div class="wellness-display-item">
+                      <div class="wellness-display-title">
+                        1. Avoided Sugary Drinks
+                      </div>
+                      <div class="wellness-display-description">
+                        No soda, juice, sweetened coffee/tea, energy drinks.
+                      </div>
+                    </div>
+                    <div class="wellness-display-item">
+                      <div class="wellness-display-title">
+                        2. Ate 5+ Servings of Fruits & Vegetables
+                      </div>
+                      <div class="wellness-display-description">
+                        Fresh, frozen, or cooked all count.
+                      </div>
+                    </div>
+                    <div class="wellness-display-item">
+                      <div class="wellness-display-title">
+                        3. Practiced Portion Control
+                      </div>
+                      <div class="wellness-display-description">
+                        Used smaller plates, stopped when satisfied.
+                      </div>
+                    </div>
+                    <div class="wellness-display-item">
+                      <div class="wellness-display-title">
+                        4. Did Not Eat After 8 PM
+                      </div>
+                      <div class="wellness-display-description">
+                        No late-night snacking.
+                      </div>
+                    </div>
+                    <div class="wellness-display-item">
+                      <div class="wellness-display-title">
+                        5. Got 7+ Hours of Sleep
+                      </div>
+                      <div class="wellness-display-description">
+                        Quality rest for recovery.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="info-box">
+                    <strong>Scoring:</strong> You need 3 or more points daily to
+                    maintain your wellness streak. This flexible system lets you
+                    have off days while still making progress.
+                  </div>
+                </div>
+
+                <div class="setting-group">
+                  <h3>Goal Thresholds</h3>
+                  <p>
+                    Customize what counts as "meeting" each daily goal. Changes
+                    sync to cloud.
+                  </p>
+
+                  <div class="setting-item">
+                    <input
+                      type="checkbox"
+                      id="allowPartialSteps"
+                      class="setting-checkbox"
+                    />
+                    <label for="allowPartialSteps" class="setting-label">
+                      Count 90% of steps goal as "met" (more forgiving)
+                    </label>
+                  </div>
+
+                  <div class="setting-item">
+                    <input
+                      type="checkbox"
+                      id="allowPartialExercise"
+                      class="setting-checkbox"
+                    />
+                    <label for="allowPartialExercise" class="setting-label">
+                      Count 80% of exercise goal as "met" (more forgiving)
+                    </label>
+                  </div>
+
+                  <div class="setting-item">
+                    <input
+                      type="checkbox"
+                      id="strictWellness"
+                      class="setting-checkbox"
+                    />
+                    <label for="strictWellness" class="setting-label">
+                      Require 4+ wellness points instead of 3+ (more
+                      challenging)
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- App Information -->
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">ℹ️ App Information</h2>
+                </div>
+
+                <div class="app-info">
+                  <div class="info-row">
+                    <span class="info-label">Version:</span>
+                    <span class="info-value">Firebase v1.1.0</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Storage:</span>
+                    <span class="info-value">Firebase Realtime Database</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Data Entries:</span>
+                    <span class="info-value" id="totalDataEntries">0</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Storage Used:</span>
+                    <span class="info-value" id="storageUsed"
+                      >Calculating...</span
+                    >
+                  </div>
+                </div>
+
+                <div class="setting-group">
+                  <h3>About This Version</h3>
+                  <p>
+                    This real-time version of BribeYourselfFit stores your
+                    fitness data securely using Firebase Realtime Database,
+                    providing instant synchronization across all devices with
+                    real-time updates and offline support.
+                  </p>
+                  <div class="button-group">
+                    <button class="btn btn-secondary" id="viewStatsBtn">
+                      📈 View App Statistics
+                    </button>
+
+                    <a
+                      href="https://github.com/TheBIMsider/BYF/tree/firebase-version"
+                      target="_blank"
+                      class="btn btn-secondary"
+                    >
+                      🔗 View on GitHub
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Danger Zone -->
+              <div class="card danger-zone">
+                <div class="card-header">
+                  <h2 class="card-title">⚠️ Danger Zone</h2>
+                </div>
+
+                <div class="setting-group">
+                  <h3>Reset Data</h3>
+                  <p class="danger-text">
+                    These actions permanently delete data and cannot be undone.
+                    Export your data first as a backup!
+                  </p>
+
+                  <div class="button-group">
+                    <button class="btn btn-warning" id="resetStreaksBtn">
+                      🔄 Reset All Streaks
+                    </button>
+                    <button class="btn btn-danger" id="clearTodayBtn">
+                      🗑️ Clear Today's Log
+                    </button>
+                    <button class="btn btn-danger" id="resetProfileBtn">
+                      👤 Reset Profile Only
+                    </button>
+                    <button class="btn btn-danger" id="resetLogsBtn">
+                      📋 Clear All Daily Logs
+                    </button>
+                    <button class="btn btn-danger" id="resetLocalDataBtn">
+                      📱 Clear Browser Cache
+                    </button>
+                    <button class="btn btn-danger" id="resetCloudDataBtn">
+                      🔥 Delete Firebase Data
+                    </button>
+                    <button class="btn btn-danger" id="resetAllDataBtn">
+                      💥 Reset Everything
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <script src="script.js"></script>
       </div>
     </div>
-
-    <script src="script.js"></script>
   </body>
 </html>

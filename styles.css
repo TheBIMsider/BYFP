@@ -1347,19 +1347,21 @@ body {
   }
 }
 
-/* Cloud-Specific CSS Additions for JSONBin Version */
+/* Firebase-Specific CSS Additions for Firebase Version */
 /* Add these styles to the end of your existing styles.css file */
 
-/* Cloud color variables */
+/* Firebase color variables */
 :root {
-  --cloud-accent: #4285f4;
+  --firebase-accent: #ff6f00;
+  --firebase-yellow: #ffca28;
   --sync-success: #34a853;
   --sync-warning: #fbbc04;
   --sync-error: #ea4335;
 }
 
 [data-theme='dark'] {
-  --cloud-accent: #5ea3f7;
+  --firebase-accent: #ff8f00;
+  --firebase-yellow: #ffd54f;
   --sync-success: #40c057;
   --sync-warning: #ffd93d;
   --sync-error: #ff6b6b;
@@ -1367,7 +1369,7 @@ body {
 
 /* Version badge in header */
 .version-badge {
-  background-color: var(--cloud-accent);
+  background-color: var(--firebase-accent);
   color: white;
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
@@ -1476,17 +1478,17 @@ body {
 .info-box {
   background: linear-gradient(
     135deg,
-    rgba(66, 133, 244, 0.1),
-    rgba(66, 133, 244, 0.05)
+    rgba(255, 111, 0, 0.1),
+    rgba(255, 111, 0, 0.05)
   );
-  border: 1px solid var(--cloud-accent);
+  border: 1px solid var(--firebase-accent);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
 .info-box h3 {
-  color: var(--cloud-accent);
+  color: var(--firebase-accent);
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
@@ -1518,7 +1520,7 @@ body {
 }
 
 .setup-steps a {
-  color: var(--cloud-accent);
+  color: var(--firebase-accent);
   text-decoration: none;
   font-weight: 500;
 }
@@ -1773,4 +1775,38 @@ body {
 .setting-checkbox:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+/* Firebase-specific visual enhancements */
+.firebase-glow {
+  box-shadow: 0 0 20px rgba(255, 111, 0, 0.3);
+}
+
+.firebase-accent-text {
+  color: var(--firebase-accent);
+}
+
+.firebase-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--firebase-accent),
+    var(--firebase-yellow)
+  );
+}
+
+/* Real-time indicator animations for Firebase */
+@keyframes firebase-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.realtime-indicator {
+  animation: firebase-pulse 2s infinite;
 }
