@@ -92,17 +92,13 @@ body {
 /* Main Content Grid */
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(400px, 1fr) 300px;
+  grid-template-columns: 1fr 300px;
   gap: 2rem;
   margin-top: 2rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .content-main {
   min-height: 400px;
-  max-width: 800px;
 }
 
 .sidebar {
@@ -122,7 +118,6 @@ body {
   box-shadow: var(--shadow);
   margin-bottom: 1.5rem;
   transition: var(--transition);
-  max-width: 100%;
 }
 
 .card-header {
@@ -154,7 +149,6 @@ body {
 
 .form-input {
   width: 100%;
-  max-width: 300px;
   padding: 0.75rem;
   border: 2px solid var(--border-color);
   border-radius: 6px;
@@ -162,10 +156,6 @@ body {
   color: var(--text-primary);
   font-size: 1rem;
   transition: var(--transition);
-}
-
-.form-input[type='number'] {
-  max-width: 150px;
 }
 
 .form-input:focus {
@@ -176,7 +166,6 @@ body {
 
 .form-select {
   width: 100%;
-  max-width: 200px;
   padding: 0.75rem;
   border: 2px solid var(--border-color);
   border-radius: 6px;
@@ -210,15 +199,6 @@ body {
   transform: translateY(-1px);
 }
 
-.btn-secondary {
-  background-color: var(--text-secondary);
-  color: white;
-}
-
-.btn-secondary:hover {
-  opacity: 0.9;
-}
-
 .btn-success {
   background-color: var(--accent-success);
   color: white;
@@ -226,29 +206,6 @@ body {
 
 .btn-success:hover {
   opacity: 0.9;
-}
-
-.btn-warning {
-  background-color: var(--accent-warning);
-  color: white;
-}
-
-.btn-warning:hover {
-  opacity: 0.9;
-}
-
-.btn-danger {
-  background-color: var(--accent-danger);
-  color: white;
-}
-
-.btn-danger:hover {
-  opacity: 0.9;
-}
-
-.btn-small {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
 }
 
 /* Streak Display */
@@ -421,13 +378,80 @@ body {
   pointer-events: none;
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .header-content {
+    padding: 0 0.5rem;
+  }
+
+  .container {
+    padding: 0.5rem;
+  }
+
+  .streak-number {
+    font-size: 2rem;
+  }
+
+  .setup-form {
+    margin: 1rem auto;
+  }
+
+  .wellness-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wellness-checkbox {
+    margin-bottom: 0.5rem;
+    margin-right: 0;
+  }
+
+  .streak-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-toggle {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .sidebar {
+    padding: 1rem;
+  }
+
+  .wellness-description {
+    font-size: 0.8rem;
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
 /* Exercise Type Selector */
 .exercise-selector {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
   margin-top: 0.5rem;
-  max-width: 600px;
 }
 
 .exercise-option {
@@ -463,6 +487,43 @@ body {
   margin: 0;
 }
 
+@media (max-width: 768px) {
+  .exercise-selector {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .exercise-option {
+    padding: 0.5rem;
+  }
+}
+
+/* Focus indicators for keyboard navigation */
+.btn:focus,
+.form-input:focus,
+.form-select:focus,
+.theme-toggle:focus,
+.wellness-checkbox:focus,
+.exercise-checkbox:focus,
+.tab-btn:focus,
+.chart-btn:focus,
+.claim-btn:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #000000;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  [data-theme='dark'] {
+    --border-color: #ffffff;
+  }
+}
+
 /* Tab Navigation */
 .tab-navigation {
   display: flex;
@@ -493,26 +554,20 @@ body {
 }
 
 .tab-content {
-  position: relative;
-  z-index: 2;
-  display: none;
-  width: 100%;
   min-height: 400px;
-  background-color: var(--bg-primary);
-  padding: 1rem;
-}
-
-.tab-content.active {
-  display: block !important;
 }
 
 .tab-content.hidden {
-  display: none !important;
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
 }
 
 /* Charts Styles */
 .charts-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -545,25 +600,17 @@ body {
 
 .chart-card {
   margin-bottom: 2rem;
-  display: block !important;
-  min-height: 500px;
 }
 
 .chart-container {
   position: relative;
-  height: 400px !important;
-  width: 100% !important;
+  height: 400px;
   padding: 1rem;
-  display: block !important;
-  overflow: visible;
-  max-width: 100%;
 }
 
 .chart-container canvas {
-  display: block !important;
   max-width: 100%;
-  height: 100% !important;
-  width: 100% !important;
+  height: auto;
 }
 
 /* Calendar Styles */
@@ -664,7 +711,7 @@ body {
 
 /* Rewards Styles */
 .rewards-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -680,7 +727,6 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 .milestone-item {
@@ -828,6 +874,20 @@ body {
   gap: 0.5rem;
 }
 
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.btn-danger {
+  background-color: var(--accent-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
 .achievements-list {
   display: flex;
   flex-direction: column;
@@ -949,7 +1009,609 @@ body {
   opacity: 0.9;
 }
 
-/* Settings Styles */
+/* Responsive Design for Charts */
+@media (max-width: 768px) {
+  .tab-navigation {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .chart-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .chart-container {
+    height: 300px;
+    padding: 0.5rem;
+  }
+
+  .milestone-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+}
+
+/* Reduced transparency for better readability */
+@media (prefers-contrast: more) {
+  .wellness-item.completed,
+  .streak-item.active {
+    background-color: var(--accent-success);
+    color: white;
+  }
+
+  .wellness-item.completed .wellness-description,
+  .streak-item.active .streak-type {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* LAYOUT FIXES - Add these rules to styles.css */
+
+/* Constrain overall app width */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Fix main grid to not stretch too wide */
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(400px, 1fr) 300px;
+  gap: 2rem;
+  margin-top: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ensure forms don't get too wide */
+.card {
+  max-width: 100%;
+}
+
+.content-main {
+  min-height: 400px;
+  max-width: 800px; /* Prevent forms from getting too wide */
+}
+
+/* Better form field sizing */
+.form-input {
+  max-width: 300px; /* Prevent inputs from stretching too wide */
+}
+
+.form-input[type='number'] {
+  max-width: 150px; /* Even narrower for number inputs */
+}
+
+/* Exercise selector improvements */
+.exercise-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  max-width: 600px; /* Prevent from getting too wide */
+}
+
+/* Charts container sizing */
+.charts-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  padding: 1rem;
+  max-width: 100%;
+}
+
+/* Rewards container sizing */
+.rewards-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Better responsive breakpoints */
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+  }
+
+  .content-main {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  .exercise-selector {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+  }
+
+  .form-input {
+    max-width: 100%;
+  }
+}
+
+/* Fix tab content visibility */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block !important;
+}
+
+.tab-content.hidden {
+  display: none !important;
+}
+
+/* COMPLETE CHART AND TAB FIXES - Add to end of styles.css */
+
+/* Fix chart container dimensions */
+.chart-container {
+  position: relative;
+  height: 400px !important;
+  width: 100% !important;
+  padding: 1rem;
+  display: block !important;
+  overflow: visible;
+}
+
+.chart-container canvas {
+  display: block !important;
+  max-width: 100%;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Fix tab content visibility */
+.tab-content {
+  display: none;
+  min-height: 600px;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.tab-content.active {
+  display: block !important;
+}
+
+/* Ensure rewards content is visible */
+#rewardsTab {
+  display: block;
+  overflow-y: auto;
+  max-height: none;
+}
+
+.milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Force chart cards to be visible */
+.chart-card {
+  margin-bottom: 2rem;
+  display: block !important;
+  min-height: 500px;
+}
+
+/* FIX TAB CONTENT POSITIONING - Add to styles.css */
+#appScreen {
+  position: relative;
+  z-index: 1;
+}
+
+.tab-content {
+  position: relative !important;
+  z-index: 2 !important;
+  display: none;
+  width: 100%;
+  min-height: 400px;
+  background-color: var(--bg-primary);
+  padding: 1rem;
+}
+
+.tab-content.active {
+  display: block !important;
+}
+
+.tab-content.hidden {
+  display: none !important;
+}
+
+/* Ensure main grid doesn't hide tab content */
+.main-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Force tab content to be visible */
+#chartsTab,
+#rewardsTab {
+  position: relative !important;
+  display: block;
+  width: 100%;
+  min-height: 500px;
+  background-color: var(--bg-primary);
+}
+
+#chartsTab.hidden,
+#rewardsTab.hidden {
+  display: none !important;
+}
+
+/* MOBILE PERFORMANCE OPTIMIZATIONS */
+
+/* Reduce animations on mobile for better performance */
+@media (max-width: 768px) {
+  /* Faster transitions on mobile */
+  * {
+    transition-duration: 0.2s !important;
+  }
+
+  /* Optimize touch targets */
+  .btn,
+  .tab-btn,
+  .chart-btn,
+  .form-input,
+  .form-select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Reduce expensive shadows on mobile */
+  .card,
+  .sidebar,
+  .success-message {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Optimize form inputs for mobile */
+  .form-input,
+  .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+  }
+
+  /* Better mobile navigation */
+  .tab-navigation {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-primary);
+    z-index: 50;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+  }
+
+  .tab-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* Ultra-mobile (phones in portrait) */
+@media (max-width: 480px) {
+  /* Reduce font sizes slightly for small screens */
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .setup-title {
+    font-size: 1.7rem;
+  }
+
+  /* Stack form elements more efficiently */
+  .form-group {
+    margin-bottom: 0.8rem;
+  }
+
+  /* Optimize tab navigation for small screens */
+  .tab-btn {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+}
+
+/* Improve performance with GPU acceleration */
+.tab-content,
+.card,
+.modal-content {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Optimize animations for mobile */
+@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
+  .celebrating {
+    animation-duration: 0.3s;
+  }
+}
+
+/* Cloud-Specific CSS Additions for JSONBin Version */
+/* Add these styles to the end of your existing styles.css file */
+
+/* Cloud color variables */
+:root {
+  --cloud-accent: #4285f4;
+  --sync-success: #34a853;
+  --sync-warning: #fbbc04;
+  --sync-error: #ea4335;
+}
+
+[data-theme='dark'] {
+  --cloud-accent: #5ea3f7;
+  --sync-success: #40c057;
+  --sync-warning: #ffd93d;
+  --sync-error: #ff6b6b;
+}
+
+/* Version badge in header */
+.version-badge {
+  background-color: var(--cloud-accent);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Cloud sync status indicators */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.sync-status.connected {
+  border-color: var(--sync-success);
+  color: var(--sync-success);
+}
+
+.sync-status.syncing {
+  border-color: var(--sync-warning);
+  color: var(--sync-warning);
+}
+
+.sync-status.error {
+  border-color: var(--sync-error);
+  color: var(--sync-error);
+}
+
+.sync-status.offline {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.sync-icon {
+  font-size: 0.8rem;
+}
+
+.sync-text {
+  font-weight: 500;
+}
+
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+  animation: pulse 2s infinite;
+}
+
+.sync-dot.synced {
+  background-color: var(--sync-success);
+  animation: none;
+}
+
+.sync-dot.syncing {
+  background-color: var(--sync-warning);
+  animation: pulse 1s infinite;
+}
+
+.sync-dot.error {
+  background-color: var(--sync-error);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.date-and-sync {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Cloud setup styles */
+.cloud-config-section {
+  margin-bottom: 2rem;
+}
+
+.info-box {
+  background: linear-gradient(
+    135deg,
+    rgba(66, 133, 244, 0.1),
+    rgba(66, 133, 244, 0.05)
+  );
+  border: 1px solid var(--cloud-accent);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-box h3 {
+  color: var(--cloud-accent);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.info-box p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.setup-steps {
+  margin: 1rem 0;
+}
+
+.setup-steps h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.setup-steps ol {
+  margin-left: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.setup-steps ol li {
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+
+.setup-steps a {
+  color: var(--cloud-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.setup-steps a:hover {
+  text-decoration: underline;
+}
+
+.pricing-note {
+  background-color: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-success);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .form-input {
+  padding-right: 3rem;
+  flex: 1;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+  transition: var(--transition);
+}
+
+.toggle-password:hover {
+  color: var(--text-primary);
+}
+
+.connection-status {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.connection-status.success {
+  background-color: rgba(52, 168, 83, 0.1);
+  border: 1px solid var(--sync-success);
+  color: var(--sync-success);
+}
+
+.connection-status.error {
+  background-color: rgba(234, 67, 53, 0.1);
+  border: 1px solid var(--sync-error);
+  color: var(--sync-error);
+}
+
+.connection-status.testing {
+  background-color: rgba(251, 188, 4, 0.1);
+  border: 1px solid var(--sync-warning);
+  color: var(--sync-warning);
+}
+
+.profile-section {
+  border-top: 2px solid var(--border-color);
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.form-label .required {
+  color: var(--accent-danger);
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Settings styles */
 .settings-container {
   max-width: 800px;
   margin: 0 auto;
@@ -971,6 +1633,28 @@ body {
   line-height: 1.5;
 }
 
+.connection-info {
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.connection-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.connection-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.connection-value {
+  color: var(--text-secondary);
+}
+
 .setting-item {
   display: flex;
   align-items: center;
@@ -978,8 +1662,7 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.setting-checkbox,
-.setting-radio {
+.setting-checkbox {
   transform: scale(1.1);
   cursor: pointer;
 }
@@ -1011,12 +1694,6 @@ body {
   color: var(--text-secondary);
 }
 
-.button-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
 .danger-zone {
   border: 2px solid var(--accent-danger);
   background: linear-gradient(
@@ -1035,217 +1712,25 @@ body {
   border-left: 3px solid var(--accent-danger);
 }
 
-.warning-text {
-  color: var(--accent-warning);
-  font-weight: 500;
-  background-color: rgba(255, 193, 7, 0.1);
-  padding: 0.75rem;
-  border-radius: 6px;
-  border-left: 3px solid var(--accent-warning);
+.btn-warning {
+  background-color: var(--accent-warning);
+  color: white;
 }
 
-.info-box {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 123, 255, 0.1),
-    rgba(0, 123, 255, 0.05)
-  );
-  border: 1px solid var(--accent-primary);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 1rem 0;
+.btn-warning:hover {
+  opacity: 0.9;
 }
 
-.wellness-items-display {
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.wellness-display-item {
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.wellness-display-item:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.wellness-display-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-}
-
-.wellness-display-description {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.shortcuts-list {
-  background-color: var(--bg-primary);
-  border-radius: 8px;
-  padding: 1rem;
-}
-
-.shortcut-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.shortcut-item:last-child {
-  margin-bottom: 0;
-}
-
-kbd {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  font-family: monospace;
-  color: var(--text-primary);
-}
-
-.form-help {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-/* Focus indicators for keyboard navigation */
-.btn:focus,
-.form-input:focus,
-.form-select:focus,
-.theme-toggle:focus,
-.wellness-checkbox:focus,
-.exercise-checkbox:focus,
-.tab-btn:focus,
-.chart-btn:focus,
-.claim-btn:focus,
-.setting-checkbox:focus,
-.setting-radio:focus {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  :root {
-    --border-color: #000000;
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  }
-
-  [data-theme='dark'] {
-    --border-color: #ffffff;
-  }
-}
-
-/* Accessibility Enhancements */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .main-grid {
-    grid-template-columns: 1fr;
-    max-width: 800px;
-  }
-
-  .content-main {
-    max-width: 100%;
-  }
-}
-
+/* Mobile responsive adjustments for cloud features */
 @media (max-width: 768px) {
-  .main-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .header-content {
-    padding: 0 0.5rem;
-  }
-
-  .container {
-    padding: 0.5rem;
-  }
-
-  .streak-number {
-    font-size: 2rem;
-  }
-
-  .setup-form {
-    margin: 1rem auto;
-  }
-
-  .wellness-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .wellness-checkbox {
-    margin-bottom: 0.5rem;
-    margin-right: 0;
-  }
-
-  .streak-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .exercise-selector {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 100%;
-  }
-
-  .form-input {
-    max-width: 100%;
-  }
-
-  .tab-navigation {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    position: sticky;
-    top: 0;
-    background-color: var(--bg-primary);
-    z-index: 50;
-    border-bottom: 2px solid var(--border-color);
-    margin-bottom: 1rem;
-  }
-
-  .tab-btn {
-    padding: 12px 16px;
-    font-size: 14px;
-    flex: 1;
-    text-align: center;
-  }
-
-  .chart-controls {
+  .header-controls {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 
-  .chart-container {
-    height: 300px;
-    padding: 0.5rem;
-  }
-
-  .milestone-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .calendar-day {
+  .sync-status {
     font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
   }
 
   .button-group {
@@ -1255,159 +1740,37 @@ kbd {
   .button-group .btn {
     width: 100%;
   }
+
+  .info-box {
+    padding: 1rem;
+  }
+
+  .setup-steps ol {
+    margin-left: 1rem;
+  }
+
+  .date-and-sync {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
-  .theme-toggle {
-    padding: 0.5rem;
-    font-size: 0.8rem;
+  .version-badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
   }
 
-  .logo {
-    font-size: 1.2rem;
-  }
-
-  .card {
-    padding: 1rem;
-  }
-
-  .sidebar {
-    padding: 1rem;
-  }
-
-  .wellness-description {
-    font-size: 0.8rem;
-  }
-
-  .card-title {
-    font-size: 1.1rem;
-  }
-
-  .setup-title {
-    font-size: 1.7rem;
-  }
-
-  .form-group {
-    margin-bottom: 0.8rem;
-  }
-
-  .tab-btn {
-    padding: 10px 8px;
-    font-size: 13px;
+  .sync-status {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
   }
 }
 
-/* Mobile Performance Optimizations */
-@media (max-width: 768px) {
-  * {
-    transition-duration: 0.2s !important;
-  }
-
-  .btn,
-  .tab-btn,
-  .chart-btn,
-  .form-input,
-  .form-select {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  .card,
-  .sidebar,
-  .success-message {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .form-input,
-  .form-select {
-    font-size: 16px;
-    padding: 12px;
-  }
-}
-
-/* Improve performance with GPU acceleration */
-.tab-content,
-.card,
-.modal-content {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Optimize animations for mobile */
-@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
-  .celebrating {
-    animation-duration: 0.3s;
-  }
-}
-
-/* Reduced transparency for better readability */
-@media (prefers-contrast: more) {
-  .wellness-item.completed,
-  .streak-item.active {
-    background-color: var(--accent-success);
-    color: white;
-  }
-
-  .wellness-item.completed .wellness-description,
-  .streak-item.active .streak-type {
-    color: rgba(255, 255, 255, 0.9);
-  }
-}
-
-/* Processing Status Indicator */
-.processing-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--background-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  transition: all 0.3s ease;
-}
-
-.processing-status.processing {
-  background: rgba(255, 193, 7, 0.1);
-  border-color: var(--accent-warning);
-  color: var(--accent-warning);
-}
-
-.processing-status.success {
-  background: rgba(40, 167, 69, 0.1);
-  border-color: var(--accent-success);
-  color: var(--accent-success);
-}
-
-.processing-status.error {
-  background: rgba(220, 53, 69, 0.1);
-  border-color: var(--accent-danger);
-  color: var(--accent-danger);
-}
-
-.processing-icon {
-  font-size: 1rem;
-  animation: none;
-}
-
-.processing-status.processing .processing-icon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.processing-text {
-  font-weight: 500;
-}
-
-/* Hide when not needed */
-.processing-status.hidden {
-  display: none;
+/* Focus indicators for new elements */
+.toggle-password:focus,
+.setting-checkbox:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }

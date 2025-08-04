@@ -1,5 +1,5 @@
-// BribeYourselfFit localStorage Service Worker - Basic Caching
-const CACHE_NAME = 'byf-localstorage-v1.1.0';
+// BribeYourselfFit JSONBin Service Worker - Basic Caching
+const CACHE_NAME = 'byf-jsonbin-v1.1.0';
 const STATIC_ASSETS = [
   './index.html',
   './styles.css',

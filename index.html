@@ -14,7 +14,7 @@
       rel="apple-touch-icon"
       href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjMDA3YmZmIiByeD0iMjQiLz4KPHBhdGggZD0iTTk2IDQ4TDEyMCA3MkgxNDRWMTIwSDEyMEwxMDggMTA4TDk2IDEyMEw4NCA1NkwxMzIgNzhMOTYgNDhaIiBmaWxsPSJ3aGl0ZSIvPgo8Y2lyY2xlIGN4PSI5NiIgY3k9IjE0NCIgcj0iMTIiIGZpbGw9IndoaXRlIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxNzQiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJZRjwvdGV4dD4KPC9zdmc+"
     />
-    <title>BribeYourselfFit - Your Personal Fitness Tracker</title>
+    <title>BribeYourselfFit - Cloud Fitness Tracker</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#007bff" />
@@ -27,12 +27,15 @@
     <!-- Header -->
     <header class="header">
       <div class="header-content">
-        <div class="logo">BribeYourselfFit</div>
+        <div class="logo">
+          BribeYourselfFit
+          <span class="version-badge">Cloud</span>
+        </div>
         <div class="header-controls">
-          <!-- Processing Status Indicator -->
-          <div class="processing-status hidden" id="processingStatus">
-            <span class="processing-icon">⏳</span>
-            <span class="processing-text">Processing...</span>
+          <!-- Sync Status Indicator -->
+          <div class="sync-status" id="syncStatus">
+            <span class="sync-icon">⚠️</span>
+            <span class="sync-text">Not Connected</span>
           </div>
           <button
             class="theme-toggle"
@@ -49,105 +52,188 @@
       <!-- Setup Screen -->
       <div id="setupScreen" class="setup-form">
         <div class="setup-header">
-          <h1 class="setup-title">Welcome to BribeYourselfFit!</h1>
-          <p class="setup-subtitle">Let's set up your personal fitness goals</p>
+          <h1 class="setup-title">Welcome to BribeYourselfFit Cloud!</h1>
+          <p class="setup-subtitle">Set up your cloud-synced fitness goals</p>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">Your Profile</h2>
+            <h2 class="card-title">Cloud Storage Setup</h2>
           </div>
 
-          <form id="setupForm">
-            <div class="form-group">
-              <label for="startingWeight" class="form-label"
-                >Current Weight (lbs)</label
-              >
-              <input
-                type="number"
-                id="startingWeight"
-                name="startingWeight"
-                class="form-input"
-                required
-                min="50"
-                max="1000"
-                step="0.1"
-              />
+          <!-- JSONBin.io API Configuration -->
+          <div class="cloud-config-section">
+            <div class="info-box">
+              <h3>📱 Your Data, Your Control</h3>
+              <p>
+                This version stores your data securely in the cloud using
+                JSONBin.io, allowing you to access your fitness data from any
+                device while keeping it private and under your control.
+              </p>
+
+              <div class="setup-steps">
+                <h4>Quick Setup (2 minutes):</h4>
+                <ol>
+                  <li>
+                    Visit
+                    <a href="https://jsonbin.io" target="_blank" rel="noopener"
+                      >jsonbin.io</a
+                    >
+                    and create a free account
+                  </li>
+                  <li>Go to "API Keys" section in your dashboard</li>
+                  <li>Copy your API key and paste it below</li>
+                  <li>Complete your fitness profile</li>
+                </ol>
+              </div>
+
+              <div class="pricing-note">
+                <strong>Free tier includes:</strong> 10,000 API requests/month
+                (enough for years of daily logging)
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="goalWeight" class="form-label"
-                >Goal Weight (lbs)</label
+            <form id="cloudSetupForm">
+              <div class="form-group">
+                <label for="jsonbinApiKey" class="form-label">
+                  JSONBin.io API Key <span class="required">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <input
+                    type="password"
+                    id="jsonbinApiKey"
+                    name="jsonbinApiKey"
+                    class="form-input"
+                    placeholder="$2a$10$..."
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggleApiKey"
+                  >
+                    👁️
+                  </button>
+                </div>
+                <small class="form-help">
+                  Your API key is stored locally and used only to sync your
+                  fitness data
+                </small>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="testConnection"
               >
-              <input
-                type="number"
-                id="goalWeight"
-                name="goalWeight"
-                class="form-input"
-                required
-                min="50"
-                max="1000"
-                step="0.1"
-              />
+                🔗 Test Connection
+              </button>
+
+              <div id="connectionStatus" class="connection-status hidden"></div>
+            </form>
+          </div>
+
+          <!-- User Profile Form -->
+          <div
+            class="profile-section"
+            id="profileSection"
+            style="display: none"
+          >
+            <div class="card-header">
+              <h2 class="card-title">Your Fitness Profile</h2>
             </div>
 
-            <div class="form-group">
-              <label for="dailySteps" class="form-label"
-                >Daily Steps Goal</label
-              >
-              <input
-                type="number"
-                id="dailySteps"
-                name="dailySteps"
-                class="form-input"
-                required
-                min="1000"
-                max="50000"
-                value="8000"
-              />
-            </div>
+            <form id="setupForm">
+              <div class="form-group">
+                <label for="startingWeight" class="form-label"
+                  >Current Weight (lbs)</label
+                >
+                <input
+                  type="number"
+                  id="startingWeight"
+                  name="startingWeight"
+                  class="form-input"
+                  required
+                  min="50"
+                  max="1000"
+                  step="0.1"
+                />
+              </div>
 
-            <div class="form-group">
-              <label for="dailyExercise" class="form-label"
-                >Daily Exercise Minutes Goal</label
-              >
-              <input
-                type="number"
-                id="dailyExercise"
-                name="dailyExercise"
-                class="form-input"
-                required
-                min="5"
-                max="300"
-                value="30"
-              />
-            </div>
+              <div class="form-group">
+                <label for="goalWeight" class="form-label"
+                  >Goal Weight (lbs)</label
+                >
+                <input
+                  type="number"
+                  id="goalWeight"
+                  name="goalWeight"
+                  class="form-input"
+                  required
+                  min="50"
+                  max="1000"
+                  step="0.1"
+                />
+              </div>
 
-            <div class="form-group">
-              <label for="dailyWater" class="form-label"
-                >Daily Water Goal (liters)</label
-              >
-              <input
-                type="number"
-                id="dailyWater"
-                name="dailyWater"
-                class="form-input"
-                required
-                min="0.5"
-                max="10"
-                step="0.1"
-                value="2"
-              />
-            </div>
+              <div class="form-group">
+                <label for="dailySteps" class="form-label"
+                  >Daily Steps Goal</label
+                >
+                <input
+                  type="number"
+                  id="dailySteps"
+                  name="dailySteps"
+                  class="form-input"
+                  required
+                  min="1000"
+                  max="50000"
+                  value="8000"
+                />
+              </div>
 
-            <button
-              type="submit"
-              class="btn btn-primary"
-              style="width: 100%; margin-top: 1rem"
-            >
-              Start My Fitness Journey
-            </button>
-          </form>
+              <div class="form-group">
+                <label for="dailyExercise" class="form-label"
+                  >Daily Exercise Minutes Goal</label
+                >
+                <input
+                  type="number"
+                  id="dailyExercise"
+                  name="dailyExercise"
+                  class="form-input"
+                  required
+                  min="5"
+                  max="300"
+                  value="30"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="dailyWater" class="form-label"
+                  >Daily Water Goal (liters)</label
+                >
+                <input
+                  type="number"
+                  id="dailyWater"
+                  name="dailyWater"
+                  class="form-input"
+                  required
+                  min="0.5"
+                  max="10"
+                  step="0.1"
+                  value="2"
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="width: 100%; margin-top: 1rem"
+              >
+                🚀 Start My Cloud Fitness Journey
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -171,7 +257,13 @@
             <div class="card">
               <div class="card-header">
                 <h2 class="card-title">Today's Log</h2>
-                <span id="currentDate"></span>
+                <div class="date-and-sync">
+                  <span id="currentDate"></span>
+                  <div class="sync-indicator" id="dashboardSync">
+                    <span class="sync-dot"></span>
+                    <span class="sync-label">Synced</span>
+                  </div>
+                </div>
               </div>
 
               <form id="dailyLogForm">
@@ -326,7 +418,7 @@
                   class="btn btn-success"
                   style="width: 100%; margin-top: 1rem"
                 >
-                  Save Today's Log
+                  💾 Save & Sync Today's Log
                 </button>
               </form>
             </div>
@@ -480,6 +572,7 @@
           </div>
         </div>
       </div>
+
       <!-- Progress Charts Tab -->
       <div id="chartsTab" class="tab-content hidden">
         <div class="charts-container">
@@ -658,6 +751,74 @@
       <!-- Settings Tab -->
       <div id="settingsTab" class="tab-content hidden">
         <div class="settings-container">
+          <!-- Cloud Sync Settings -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">☁️ Cloud Sync Settings</h2>
+            </div>
+
+            <div class="setting-group">
+              <h3>Connection Status</h3>
+              <div class="connection-info" id="connectionInfo">
+                <div class="connection-row">
+                  <span class="connection-label">Status:</span>
+                  <span class="connection-value" id="settingsConnectionStatus"
+                    >Checking...</span
+                  >
+                </div>
+                <div class="connection-row">
+                  <span class="connection-label">Last Sync:</span>
+                  <span class="connection-value" id="lastSyncTime">Never</span>
+                </div>
+                <div class="connection-row">
+                  <span class="connection-label">Pending Syncs:</span>
+                  <span class="connection-value" id="pendingSyncs">0</span>
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button class="btn btn-primary" id="forceSyncBtn">
+                  🔄 Force Sync Now
+                </button>
+                <button class="btn btn-secondary" id="testConnectionBtn">
+                  🔗 Test Connection
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>API Configuration</h3>
+              <div class="form-group">
+                <label for="settingsApiKey" class="form-label"
+                  >JSONBin.io API Key</label
+                >
+                <div class="input-with-icon">
+                  <input
+                    type="password"
+                    id="settingsApiKey"
+                    class="form-input"
+                    placeholder="API key is set"
+                    readonly
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    id="toggleSettingsApiKey"
+                  >
+                    👁️
+                  </button>
+                </div>
+                <small class="form-help">
+                  Your API key is stored securely in your browser
+                </small>
+              </div>
+
+              <button class="btn btn-warning" id="updateApiKeyBtn">
+                🔑 Update API Key
+              </button>
+            </div>
+          </div>
+
           <!-- App Preferences -->
           <div class="card">
             <div class="card-header">
@@ -737,7 +898,8 @@
             <div class="setting-group">
               <h3>Daily Goals</h3>
               <p>
-                Modify your daily fitness targets. Changes apply immediately.
+                Modify your daily fitness targets. Changes apply immediately and
+                sync to cloud.
               </p>
 
               <div class="form-group">
@@ -788,12 +950,13 @@
             <div class="setting-group">
               <h3>Weight Goals</h3>
               <p>
-                Update your weight targets. This preserves your streak history.
+                Update your weight targets. This preserves your streak history
+                and syncs to cloud.
               </p>
 
               <div class="form-group">
                 <label for="settingsStartingWeight" class="form-label"
-                  >Starting Weight</label
+                  >Starting Weight (lbs)</label
                 >
                 <input
                   type="number"
@@ -812,7 +975,7 @@
 
               <div class="form-group">
                 <label for="settingsGoalWeight" class="form-label"
-                  >Goal Weight</label
+                  >Goal Weight (lbs)</label
                 >
                 <input
                   type="number"
@@ -839,22 +1002,24 @@
             <div class="setting-group">
               <h3>Backup & Export</h3>
               <p>
-                Download your fitness data for backup or migration to cloud
-                versions.
+                Download your fitness data for backup or migration purposes.
               </p>
               <div class="button-group">
-                <button class="btn btn-primary" id="exportDataBtn">
-                  💾 Export All Data
+                <button class="btn btn-primary" id="exportCloudDataBtn">
+                  💾 Export Cloud Data
                 </button>
-                <button class="btn btn-secondary" id="exportLogsBtn">
-                  📋 Export Daily Logs Only
+                <button class="btn btn-secondary" id="exportLocalDataBtn">
+                  📱 Export Local Backup
                 </button>
               </div>
             </div>
 
             <div class="setting-group">
               <h3>Import Data</h3>
-              <p>Restore data from a backup file.</p>
+              <p>
+                Restore data from a backup file. This will sync to your cloud
+                storage.
+              </p>
               <div class="form-group">
                 <label for="importFile" class="form-label"
                   >Select Backup File</label
@@ -869,6 +1034,32 @@
               <button class="btn btn-warning" id="importDataBtn">
                 📥 Import Data
               </button>
+            </div>
+
+            <div class="setting-group">
+              <h3>Sync Preferences</h3>
+              <div class="setting-item">
+                <input
+                  type="checkbox"
+                  id="autoSyncEnabled"
+                  class="setting-checkbox"
+                  checked
+                />
+                <label for="autoSyncEnabled" class="setting-label">
+                  Automatic sync after data changes
+                </label>
+              </div>
+              <div class="setting-item">
+                <input
+                  type="checkbox"
+                  id="syncNotifications"
+                  class="setting-checkbox"
+                  checked
+                />
+                <label for="syncNotifications" class="setting-label">
+                  Show sync status notifications
+                </label>
+              </div>
             </div>
           </div>
 
@@ -934,7 +1125,10 @@
 
             <div class="setting-group">
               <h3>Goal Thresholds</h3>
-              <p>Customize what counts as "meeting" each daily goal.</p>
+              <p>
+                Customize what counts as "meeting" each daily goal. Changes sync
+                to cloud.
+              </p>
 
               <div class="setting-item">
                 <input
@@ -980,66 +1174,37 @@
             <div class="app-info">
               <div class="info-row">
                 <span class="info-label">Version:</span>
-                <span class="info-value">localStorage v1.1.0</span>
+                <span class="info-value">Cloud v1.1.0</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Storage:</span>
-                <span class="info-value">Browser Local Storage</span>
+                <span class="info-value">JSONBin.io Cloud</span>
               </div>
               <div class="info-row">
-                <span class="info-label">Data Location:</span>
-                <span class="info-value">Stored locally in your browser</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Total Daily Logs:</span>
+                <span class="info-label">Data Entries:</span>
                 <span class="info-value" id="totalDataEntries">0</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Storage Used:</span>
                 <span class="info-value" id="storageUsed">Calculating...</span>
               </div>
-              <div class="info-row">
-                <span class="info-label">Profile Created:</span>
-                <span class="info-value" id="profileCreated">--</span>
-              </div>
             </div>
 
             <div class="setting-group">
-              <h3>Keyboard Shortcuts</h3>
-              <div class="shortcuts-list">
-                <div class="shortcut-item">
-                  <kbd>Alt + 1</kbd> <span>Switch to Dashboard</span>
-                </div>
-                <div class="shortcut-item">
-                  <kbd>Alt + 2</kbd> <span>Switch to Progress</span>
-                </div>
-                <div class="shortcut-item">
-                  <kbd>Alt + 3</kbd> <span>Switch to Rewards</span>
-                </div>
-                <div class="shortcut-item">
-                  <kbd>Alt + 4</kbd> <span>Switch to Settings</span>
-                </div>
-                <div class="shortcut-item">
-                  <kbd>Alt + T</kbd> <span>Toggle Theme</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <h3>About BribeYourselfFit</h3>
+              <h3>About This Version</h3>
               <p>
-                This localStorage version stores all your fitness data directly
-                in your browser. Your data never leaves your device, ensuring
-                complete privacy. Consider the cloud version if you want to
-                access your data from multiple devices.
+                This cloud-enabled version of BribeYourselfFit stores your
+                fitness data securely using JSONBin.io, allowing you to access
+                your data from any device while maintaining complete privacy and
+                control.
               </p>
 
               <div class="button-group">
                 <button class="btn btn-secondary" id="viewStatsBtn">
-                  📈 View Detailed Statistics
+                  📈 View App Statistics
                 </button>
                 <a
-                  href="https://github.com/TheBIMsider/BYF"
+                  href="https://github.com/TheBIMsider/BYF/tree/jsonbin-version"
                   target="_blank"
                   class="btn btn-secondary"
                 >
@@ -1075,8 +1240,14 @@
                 <button class="btn btn-danger" id="resetLogsBtn">
                   📋 Clear All Daily Logs
                 </button>
+                <button class="btn btn-danger" id="resetLocalDataBtn">
+                  📱 Clear Browser Cache
+                </button>
+                <button class="btn btn-danger" id="resetCloudDataBtn">
+                  ☁️ Delete Cloud Data
+                </button>
                 <button class="btn btn-danger" id="resetAllDataBtn">
-                  💥 Reset All Data
+                  💥 Reset Everything
                 </button>
               </div>
             </div>
